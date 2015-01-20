@@ -5,6 +5,15 @@ Created on Mon Jan 19 20:49:38 2015
 @author: sacim
 """
 
+import numpy as np
+import math
+
+def midpt(P1, P2):
+    P=np.array((P1[0]+P2[0],P1[1]+P2[1],P1[2]+P2[2]))
+        
+    return P/math.sqrt(np.sum(P**2))
+
+
 a=1.
 tau = 0.5*(math.sqrt(5.)+1.)
 rho=tau-1.
@@ -45,7 +54,7 @@ Ad=np.zeros((12,3))
 for i in range(12):
     Ad[i,:]=np.dot(Ry,np.transpose(A[i,:]))
 
-ngrid=1
+ngrid=4
 xn=np.zeros(10*(ngrid+1)**2)
 yn=np.zeros(10*(ngrid+1)**2)
 zn=np.zeros(10*(ngrid+1)**2)
@@ -98,6 +107,29 @@ for id in range(10):
          yn[id*(ngrid+1)**2+(ngrid+1)**2-1] = Ad[11][1];
          zn[id*(ngrid+1)**2+(ngrid+1)**2-1] = Ad[11][2]; 
     
+    
+    
+for k in range(1,int(1.45*math.log(ngrid))):
+    
+     m  = int(2**k+0.1)
+     l  = ngrid/m
+     l2 = l/2
+
+     # rows of diamond--
+     for j1 in range(m+1):
+         for j2 in range(m):
+             i1 = j1*l;
+             i2 = j2*l + l2;
+             index = id*(ngrid+1)**2 + ngrid*i2 + i1
+             index1= id*(ngrid+1)**2 + ngrid*(i2-l2) + i1
+             index2= id*(ngrid+1)**2 + ngrid*(i2+l2) + i1
+             T=midpt((xn[index1],yn[index1],zn[index1]),(xn[index2],yn[index2],zn[index2]));
+             xn[index]=T[0]
+             xn[index]=T[1]
+             xn[index]=T[2]
+	  
+
+
 verts = [zip(xn,yn,zn)]
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
