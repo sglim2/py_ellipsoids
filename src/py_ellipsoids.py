@@ -5,6 +5,111 @@ import numpy as np
 import math
 from mayavi import mlab
 
+def create_ellipsoid_prametric(a,b,c,ngrid=24):
+    u = np.linspace(0, 2*np.pi, num=ngrid, endpoint=True)
+    v = np.linspace(0, np.pi, num=ngrid, endpoint=True)
+
+    # Cartesian representation of data
+    x = a * np.outer(np.cos(u), np.sin(v))
+    y = b * np.outer(np.sin(u), np.sin(v))
+    z = c * np.outer(np.ones_like(u), np.cos(v))
+    
+    return (x,y,z)
+    
+def create_icosahedron_vertices():
+    
+    a=1.
+    tau = 0.5*(math.sqrt(5.)+1.)
+    rho=tau-1.
+    u=a/(math.sqrt(1.+rho**2.))
+    v=rho*u
+    
+    A =np.zeros((12,3))
+        
+    A[0][0] = v;  A[0][1] = 0; A[0][2] = u; 
+    A[1][0] = u;  A[1][1] = v; A[1][2] = 0; 
+    A[2][0] = 0;  A[2][1] = u; A[2][2] = v;   
+    A[3][0] =-v;  A[3][1] = 0; A[3][2] = u;  
+    A[4][0] = 0;  A[4][1] =-u; A[4][2] = v;  
+    A[5][0] = u;  A[5][1] =-v; A[5][2] = 0;
+    A[6][0] = v;  A[6][1] = 0; A[6][2] =-u; 
+    A[7][0] = 0;  A[7][1] = u; A[7][2] =-v;
+    A[8][0] =-u;  A[8][1] = v; A[8][2] = 0;
+    A[9][0] =-u;  A[9][1] =-v; A[9][2] = 0;
+    A[10][0]= 0;  A[10][1]=-u; A[10][2]=-v;  
+    A[11][0]=-v;  A[11][1]= 0; A[11][2]=-u;
+    
+    return A
+    
+def create_ellipsoid_icosahedron(a,b,c,ngrid=24):
+    #create unit sphere
+  
+    for id in range(1):
+    if id<5:
+	# Northern Hemisphere
+	index = idx(0, 0, 0);
+	xn[index] = Ad[0][0];
+	yn[index] = Ad[0][1];
+	zn[index] = Ad[0][2];
+	// mt,0
+	index = idx(0, mt, 0);
+	xn[index] = Ad[id+1][0];
+	yn[index] = Ad[id+1][1];
+	zn[index] = Ad[id+1][2]; 
+	// 0,mt
+	index = idx(0, 0, mt);
+	if (id == 0) {
+	    xn[index] = Ad[id+5][0];
+	    yn[index] = Ad[id+5][1];
+	    zn[index] = Ad[id+5][2]; 
+	}else{
+	    xn[index] = Ad[id][0];
+	    yn[index] = Ad[id][1];
+	    zn[index] = Ad[id][2]; 
+	}
+	// mt,mt
+	index = idx(0, mt, mt);
+	xn[index] = Ad[id+6][0];
+	yn[index] = Ad[id+6][1];
+	zn[index] = Ad[id+6][2]; 
+	
+	// Southern Hemisphere
+    }else{
+	// South Pole
+	index = idx(0, 0, 0);
+	xn[index] = Ad[11][0];
+	yn[index] = Ad[11][1];
+	zn[index] = Ad[11][2];
+	// mt,0
+	index = idx(0, mt, 0);
+	if (id == 9) {
+	    xn[index] = Ad[id-3][0];
+	    yn[index] = Ad[id-3][1];
+	    zn[index] = Ad[id-3][2]; 
+	}else{
+	    xn[index] = Ad[id+2][0];
+	    yn[index] = Ad[id+2][1];
+	    zn[index] = Ad[id+2][2]; 
+	}
+	// 0,mt
+	index = idx(0, 0, mt);
+	xn[index] = Ad[id+1][0];
+	yn[index] = Ad[id+1][1];
+	zn[index] = Ad[id+1][2]; 
+	// mt,mt
+	index = idx(0, mt, mt);
+	xn[index] = Ad[id-4][0];
+	yn[index] = Ad[id-4][1];
+	zn[index] = Ad[id-4][2]; 
+    }
+    x=np.zeros(ngrid)
+    y=np.zeros()
+    z=np.zeros()
+  
+    return
+    
+    
+    
 def rotate_about_xaxis(alpha, point):
     """Returns a point rotated by alpha radians about the x axis.
     
@@ -66,28 +171,29 @@ def rotate_about_u(theta, point, u):
 #    ----   +  ----   +  ----    =   1
 #    a**2      b**2      c**2
 #======================================
-coefs = (10., 3., 1.)
+#coefs = (10., 3., 1.)
 
-ngrid=120
+ngrid=5
+(x,y,z)=create_ellipsoid_prametric(1.,1.,1.,ngrid)
 
-# Set of all spherical angles:
-u = np.linspace(0, 2*np.pi, num=ngrid, endpoint=True)
-v = np.linspace(0, np.pi, num=ngrid, endpoint=True)
+A=create_ellipsoid_icosahedron(10.,3.,1.,7)
 
-# Cartesian representation of data
-x = coefs[0] * np.outer(np.cos(u), np.sin(v))
-y = coefs[1] * np.outer(np.sin(u), np.sin(v))
-z = coefs[2] * np.outer(np.ones_like(u), np.cos(v))
+xn=A[:,0]
+yn=A[:,1]
+zn=A[:,2]
 
-xr1=np.zeros((120,120))
-yr1=np.zeros((120,120))
-zr1=np.zeros((120,120))
-xr2=np.zeros((120,120))
-yr2=np.zeros((120,120))
-zr2=np.zeros((120,120))
-xr3=np.zeros((120,120))
-yr3=np.zeros((120,120))
-zr3=np.zeros((120,120))
+
+
+# Set of all x,y,z after rotations
+xr1=np.zeros((ngrid,ngrid))
+yr1=np.zeros((ngrid,ngrid))
+zr1=np.zeros((ngrid,ngrid))
+xr2=np.zeros((ngrid,ngrid))
+yr2=np.zeros((ngrid,ngrid))
+zr2=np.zeros((ngrid,ngrid))
+xr3=np.zeros((ngrid,ngrid))
+yr3=np.zeros((ngrid,ngrid))
+zr3=np.zeros((ngrid,ngrid))
 
 
 #alpha=np.pi/6  # 30 degrees 
@@ -127,14 +233,15 @@ for i in range(ngrid):
 #m = mlab.mesh(x  , y  , z  , color=(0.0, 0.0, 1.0))  # blue
 #n = mlab.mesh(xr1, yr1, zr1, color=(0.0, 1.0, 0.0))  # green
 #o = mlab.mesh(xr2, yr2, zr2, color=(1.0, 0.0, 0.0))  # red
-p = mlab.mesh(xr3, yr3, zr3, color=(1.0, 1.0, 0.0))  # yellow
+mlab.mesh(x, y, z, color=(1.0, 1.0, 0.0))  # yellow
+mlab.mesh(x, y, z, representation='wireframe', color=(0, 0, 0))
 mlab.show()
-                 
-# plot with matplotlib
-#fig = plt.figure()
-#ax = fig.add_subplot(111, projection='3d')
-#ax.plot_wireframe(xr3, yr3, zr3, rstride=8, cstride=8, color='k', alpha=0.25)
-#ax.set_xlabel('x')
-#ax.set_ylabel('y')
-#ax.set_zlabel('z')
-#plt.show()
+
+mlab.scatter3
+
+
+# convert to collada
+from collada import *
+
+
+
