@@ -8,6 +8,9 @@ Created on Mon Jan 19 20:49:38 2015
 import numpy as np
 import math
 
+def normalize(P):
+    return P/math.sqrt(np.sum(P**2))
+
 def midpt(P1, P2):
     P=np.array((P1[0]+P2[0],P1[1]+P2[1],P1[2]+P2[2]))
         
@@ -59,6 +62,7 @@ xn=np.zeros(10*(ngrid+1)**2)
 yn=np.zeros(10*(ngrid+1)**2)
 zn=np.zeros(10*(ngrid+1)**2)
 
+# Define Domain corners
 for id in range(10):
      if id<5:
          # Northern Hemisphere
@@ -109,34 +113,174 @@ for id in range(10):
     
     
     
-for k in range(1,int(1.45*math.log(ngrid))):
-    
-     m  = int(2**k+0.1)
-     l  = ngrid/m
-     l2 = l/2
-
-     # rows of diamond--
-     for j1 in range(m+1):
-         for j2 in range(m):
-             i1 = j1*l;
-             i2 = j2*l + l2;
-             index = id*(ngrid+1)**2 + ngrid*i2 + i1
-             index1= id*(ngrid+1)**2 + ngrid*(i2-l2) + i1
-             index2= id*(ngrid+1)**2 + ngrid*(i2+l2) + i1
-             T=midpt((xn[index1],yn[index1],zn[index1]),(xn[index2],yn[index2],zn[index2]));
-             xn[index]=T[0]
-             xn[index]=T[1]
-             xn[index]=T[2]
+# Define Domain points between corners
+for id in range(10):
+    for k in range(1,ngrid):
+        # upper left line
+        index1 = id*(ngrid+1)**2 + 0
+        index2 = id*(ngrid+1)**2 + ngrid
+        index  = id*(ngrid+1)**2 + k
+        
+        xn[index] = xn[index1] + 1.*k*(xn[index2]-xn[index1])/ngrid
+        yn[index] = yn[index1] + 1.*k*(yn[index2]-yn[index1])/ngrid
+        zn[index] = zn[index1] + 1.*k*(zn[index2]-zn[index1])/ngrid
+        (xn[index],yn[index],zn[index]) = normalize(np.array((xn[index],yn[index],zn[index])))
+        
+        # upper right line
+        index1 = id*(ngrid+1)**2 + 0
+        index2 = id*(ngrid+1)**2 + (ngrid+1)*ngrid
+        index  = id*(ngrid+1)**2 + (ngrid+1)*k
+        
+        xn[index] = xn[index1] + 1.*k*(xn[index2]-xn[index1])/ngrid
+        yn[index] = yn[index1] + 1.*k*(yn[index2]-yn[index1])/ngrid
+        zn[index] = zn[index1] + 1.*k*(zn[index2]-zn[index1])/ngrid
+        (xn[index],yn[index],zn[index]) = normalize(np.array((xn[index],yn[index],zn[index])))
+        
 	  
+        # lower left line
+        index1 = id*(ngrid+1)**2 + ngrid
+        index2 = id*(ngrid+1)**2 + (ngrid+1)**2-1
+        index  = id*(ngrid+1)**2 + (ngrid+1)*(k+1)-1
+        
+        xn[index] = xn[index1] + 1.*k*(xn[index2]-xn[index1])/ngrid
+        yn[index] = yn[index1] + 1.*k*(yn[index2]-yn[index1])/ngrid
+        zn[index] = zn[index1] + 1.*k*(zn[index2]-zn[index1])/ngrid
+        (xn[index],yn[index],zn[index]) = normalize(np.array((xn[index],yn[index],zn[index])))
+     
+     
+        # lower right line
+        index1 = id*(ngrid+1)**2 + (ngrid+1)*ngrid
+        index2 = id*(ngrid+1)**2 + (ngrid+1)**2-1
+        index  = id*(ngrid+1)**2 + (ngrid+1)*ngrid+k
+        
+        xn[index] = xn[index1] + 1.*k*(xn[index2]-xn[index1])/ngrid
+        yn[index] = yn[index1] + 1.*k*(yn[index2]-yn[index1])/ngrid
+        zn[index] = zn[index1] + 1.*k*(zn[index2]-zn[index1])/ngrid
+        (xn[index],yn[index],zn[index]) = normalize(np.array((xn[index],yn[index],zn[index])))
+        
+
+        # middle line
+        index1 = id*(ngrid+1)**2 + ngrid
+        index2 = id*(ngrid+1)**2 + (ngrid+1)*ngrid
+        index  = id*(ngrid+1)**2 + (ngrid+1)*k+ngrid-k
+        
+        xn[index] = xn[index1] + 1.*k*(xn[index2]-xn[index1])/ngrid
+        yn[index] = yn[index1] + 1.*k*(yn[index2]-yn[index1])/ngrid
+        zn[index] = zn[index1] + 1.*k*(zn[index2]-zn[index1])/ngrid
+        (xn[index],yn[index],zn[index]) = normalize(np.array((xn[index],yn[index],zn[index])))
+        
+        
+# Define Domain points all over 
+    # top half triangle
+    for k in range(2,ngrid):
+        for l in range(1,k):
+            index1 = id*(ngrid+1)**2 + k
+            index2 = id*(ngrid+1)**2 + k*(ngrid+1)
+            index  = id*(ngrid+1)**2 + k + l*(ngrid)
+        
+            xn[index] = xn[index1] + 1.*l*(xn[index2]-xn[index1])/k
+            yn[index] = yn[index1] + 1.*l*(yn[index2]-yn[index1])/k
+            zn[index] = zn[index1] + 1.*l*(zn[index2]-zn[index1])/k
+            (xn[index],yn[index],zn[index]) = normalize(np.array((xn[index],yn[index],zn[index])))
+            
+            
+    # bottom half triangle
+    for k in range(2,ngrid):
+        for l in range(1,ngrid+1-k):
+            index1 = id*(ngrid+1)**2 + k*(ngrid+1) - 1
+            index2 = id*(ngrid+1)**2 + (ngrid+1)*ngrid + k -1
+            index  = id*(ngrid+1)**2 + k*(ngrid+1) -1 + l*(ngrid)
+        
+            xn[index] = xn[index1] + 1.*l*(xn[index2]-xn[index1])/(ngrid+1-k)
+            yn[index] = yn[index1] + 1.*l*(yn[index2]-yn[index1])/(ngrid+1-k)
+            zn[index] = zn[index1] + 1.*l*(zn[index2]-zn[index1])/(ngrid+1-k)
+            (xn[index],yn[index],zn[index]) = normalize(np.array((xn[index],yn[index],zn[index])))
+        
+
+NT=10*2*ngrid**2
+TP1=np.zeros((NT,3)) # triangle point 1 x,y,z positions
+TP2=np.zeros((NT,3)) #        "       2      "
+TP3=np.zeros((NT,3)) #        "       3      "
+# Create triangles  
+for id in range(10):
+    for k in range(ngrid):
+        for l in range(ngrid):
+            
+            Tindex=id*2*ngrid*ngrid + k*2*ngrid + l
+            
+            index1=id*(ngrid+1)**2 + k*(ngrid+1) +l
+            index2=id*(ngrid+1)**2 + k*(ngrid+1) +l+1
+            index3=id*(ngrid+1)**2 + (k+1)*(ngrid+1) +l
+            
+            TP1[Tindex][0] = xn[index1]
+            TP1[Tindex][1] = yn[index1]
+            TP1[Tindex][2] = zn[index1]
+            TP2[Tindex][0] = xn[index2]
+            TP2[Tindex][1] = yn[index2]
+            TP2[Tindex][2] = zn[index2]
+            TP3[Tindex][0] = xn[index3]
+            TP3[Tindex][1] = yn[index3]
+            TP3[Tindex][2] = zn[index3]
+            
+        for l in range(0,ngrid):
+            
+            Tindex=id*2*ngrid*ngrid + k*2*ngrid + ngrid + l
+            
+            index1=id*(ngrid+1)**2 +     k*(ngrid+1) + l+1
+            index2=id*(ngrid+1)**2 + (k+1)*(ngrid+1) + l+1
+            index3=id*(ngrid+1)**2 + (k+1)*(ngrid+1) + l
+            
+            TP1[Tindex][0] = xn[index1]
+            TP1[Tindex][1] = yn[index1]
+            TP1[Tindex][2] = zn[index1]
+            TP2[Tindex][0] = xn[index2]
+            TP2[Tindex][1] = yn[index2]
+            TP2[Tindex][2] = zn[index2]
+            TP3[Tindex][0] = xn[index3]
+            TP3[Tindex][1] = yn[index3]
+            TP3[Tindex][2] = zn[index3]
+                     
 
 
-verts = [zip(xn,yn,zn)]
+NTP1=np.zeros((NT,3))
+NTP2=np.zeros((NT,3))
+NTP3=np.zeros((NT,3))
+
+for t in range(NT):
+    NTP1[t,:] = np.cross(TP1[t,:]-TP2[t,:],TP3[t,:]-TP2[t,:])
+    NTP3[t,:] = NTP2[t,:] = NTP1[t,:]
+        
+TP=np.zeros((3*NT,3))
+TP[0::3,:]=TP1[:,:]
+TP[1::3,:]=TP2[:,:]
+TP[2::3,:]=TP3[:,:]
+
+
+NP=np.zeros((3*NT,3))
+NP[0::3,:]=NTP1[:,:]
+NP[1::3,:]=NTP2[:,:]
+NP[2::3,:]=NTP3[:,:]
+
+indices=np.zeros((3*NT,2))
+
+for i in range(NT):
+    indices[3*i+0]=i
+    indices[3*i+1]=i
+    indices[3*i+2]=i
+
+#Tx.reshape((NT*3,1))           
+#Ty.reshape((NT*3,1))           
+#Tz.reshape((NT*3,1))   
+
+#verts = [zip(Tx,Ty,Tz)]
+
+
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
-ax.scatter(xn, yn, zn)
+ax.scatter(xn, yn, zn, s=0.1)
 plt.show()
     
     
