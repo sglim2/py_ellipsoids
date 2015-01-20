@@ -5,6 +5,8 @@ Created on Mon Jan 19 20:49:38 2015
 @author: sacim
 """
 
+
+from collada import *
 import numpy as np
 import math
 
@@ -57,7 +59,7 @@ Ad=np.zeros((12,3))
 for i in range(12):
     Ad[i,:]=np.dot(Ry,np.transpose(A[i,:]))
 
-ngrid=4
+ngrid=8
 xn=np.zeros(10*(ngrid+1)**2)
 yn=np.zeros(10*(ngrid+1)**2)
 zn=np.zeros(10*(ngrid+1)**2)
@@ -241,6 +243,10 @@ for id in range(10):
             TP3[Tindex][2] = zn[index3]
                      
 
+TP=np.zeros((3*NT,3))
+TP[0::3,:]=TP1[:,:]
+TP[1::3,:]=TP2[:,:]
+TP[2::3,:]=TP3[:,:]
 
 NTP1=np.zeros((NT,3))
 NTP2=np.zeros((NT,3))
@@ -250,10 +256,7 @@ for t in range(NT):
     NTP1[t,:] = np.cross(TP1[t,:]-TP2[t,:],TP3[t,:]-TP2[t,:])
     NTP3[t,:] = NTP2[t,:] = NTP1[t,:]
         
-TP=np.zeros((3*NT,3))
-TP[0::3,:]=TP1[:,:]
-TP[1::3,:]=TP2[:,:]
-TP[2::3,:]=TP3[:,:]
+        
 
 
 NP=np.zeros((3*NT,3))
@@ -261,31 +264,66 @@ NP[0::3,:]=NTP1[:,:]
 NP[1::3,:]=NTP2[:,:]
 NP[2::3,:]=NTP3[:,:]
 
+NP=-1.*NP
+
 indices=np.zeros((3*NT,2))
 
 for i in range(NT):
-    indices[3*i+0]=i
-    indices[3*i+1]=i
-    indices[3*i+2]=i
-
-#Tx.reshape((NT*3,1))           
-#Ty.reshape((NT*3,1))           
-#Tz.reshape((NT*3,1))   
-
-#verts = [zip(Tx,Ty,Tz)]
+    indices[3*i+0,0]=i
+    indices[3*i+1,0]=i
+    indices[3*i+2,0]=i
+    indices[3*i+0,1]=i
+    indices[3*i+1,1]=i
+    indices[3*i+2,1]=i
 
 
-from mpl_toolkits.mplot3d import Axes3D
-import matplotlib.pyplot as plt
+# Scale to ellipsoid
+Sx=25.
+Sy=50
+Sz=100.
+for i in range(3*NT):
+    TP[i,0]=Sx*TP[i,0]
+    TP[i,1]=Sy*TP[i,1]
+    TP[i,2]=Sz*TP[i,2]
 
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-ax.scatter(xn, yn, zn, s=0.1)
-plt.show()
+indices=np.zeros(3*2*NT,dtype=int)
+for i in range(3*NT):
+    indices[2*i+0]=indices[2*i+1]=i
+#indices = np.array([0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8])
+     
+     
+mesh = Collada()
+effect = material.Effect("effect0", [], "phong", diffuse=(1,0,0), specular=(0,1,0))
+mat = material.Material("material0", "mymaterial", effect)
+mesh.effects.append(effect)
+mesh.materials.append(mat)
     
     
-    
-    
+vert_src = source.FloatSource("triverts-array", np.array(TP), ('X', 'Y', 'Z'))
+normal_src = source.FloatSource("trinormals-array", np.array(NP), ('X', 'Y', 'Z'))
+
+geom = geometry.Geometry(mesh, "geometry0", "mytri", [vert_src, normal_src])
+
+
+input_list = source.InputList()
+input_list.addInput(0, 'VERTEX', "#triverts-array")
+input_list.addInput(1, 'NORMAL', "#trinormals-array")
+
+
+triset = geom.createTriangleSet(indices, input_list, "materialref")
+geom.primitives.append(triset)
+mesh.geometries.append(geom)
+
+matnode = scene.MaterialNode("materialref", mat, inputs=[])
+geomnode = scene.GeometryNode(geom, [matnode])
+node = scene.Node("node0", children=[geomnode])
+
+myscene = scene.Scene("myscene", [node])
+mesh.scenes.append(myscene)
+mesh.scene = myscene
+
+mesh.write('/home/sacim/triangle.dae')
+
     
     
     
