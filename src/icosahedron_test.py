@@ -59,7 +59,7 @@ Ad=np.zeros((12,3))
 for i in range(12):
     Ad[i,:]=np.dot(Ry,np.transpose(A[i,:]))
 
-ngrid=8
+ngrid=4
 xn=np.zeros(10*(ngrid+1)**2)
 yn=np.zeros(10*(ngrid+1)**2)
 zn=np.zeros(10*(ngrid+1)**2)
@@ -85,7 +85,7 @@ for id in range(10):
              xn[id*(ngrid+1)**2+(ngrid+1)*ngrid] = Ad[id+2][0]
              yn[id*(ngrid+1)**2+(ngrid+1)*ngrid] = Ad[id+2][1]
              zn[id*(ngrid+1)**2+(ngrid+1)*ngrid] = Ad[id+2][2]
-             # mt,mt
+         # mt,mt
          xn[id*(ngrid+1)**2+(ngrid+1)**2-1] = Ad[id+6][0]
          yn[id*(ngrid+1)**2+(ngrid+1)**2-1] = Ad[id+6][1]
          zn[id*(ngrid+1)**2+(ngrid+1)**2-1] = Ad[id+6][2]
@@ -290,8 +290,11 @@ indices=np.zeros(3*2*NT,dtype=int)
 for i in range(3*NT):
     indices[2*i+0]=indices[2*i+1]=i
 #indices = np.array([0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8])
-     
-     
+    
+TPtest=TP
+NPtest=NP
+indicestest=indices
+    
 mesh = Collada()
 effect = material.Effect("effect0", [], "phong", diffuse=(1,0,0), specular=(0,1,0))
 mat = material.Material("material0", "mymaterial", effect)
