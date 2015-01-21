@@ -74,7 +74,8 @@ def rotate_point_about_u(theta, point, u):
 
 
 
-(TP,NP,indices,NT) = ico.create_icosahedron(32)
+# Google-Earth has a limits of 64k vertices
+(TP,NP,indices,NT) = ico.create_icosahedron_optimized(16)
 
 ########################################
 ########################################
@@ -171,3 +172,44 @@ mesh.scene = myscene
 mesh.write('/home/sacim/ellipsoid.dae')
 
 
+
+
+
+
+
+
+
+'''
+
+# The model path and scale variables
+car_dae = r'http://simplekml.googlecode.com/hg/samples/resources/car-model.dae'
+car_scale = 1.0
+
+# Create the KML document
+kml = Kml(name="Car", open=1)
+
+# Create the model
+model_car = Model(altitudemode=AltitudeMode.clamptoground,
+                            orientation=Orientation(heading=75.0),
+                            scale=Scale(x=car_scale, y=car_scale, z=car_scale))
+
+# Create the track
+trk = kml.newgxtrack(name="Tumbler", altitudemode=AltitudeMode.clamptoground,
+                     description="Model from: http://sketchup.google.com/3dwarehouse/details?mid=88a57c5396d3703dec0b522a48034ff2")
+
+# Attach the model to the track
+trk.model = model_car
+trk.model.link.href = car_dae
+
+# Add all the information to the track
+trk.newwhen(car_info["when"])
+trk.newgxcoord(car_info["coord"])
+
+# Turn-off default icon and text and hide the linestring
+trk.iconstyle.icon.href = ""
+trk.labelstyle.scale = 0
+trk.linestyle.width = 0
+
+# Saving
+kml.save("/home/sacim/testSimpleKML.kml")
+'''
