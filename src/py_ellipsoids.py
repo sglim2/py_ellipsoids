@@ -1,13 +1,36 @@
 #!/bin/python
 import numpy as np
-#import matplotlib.pyplot as plt
-#from mpl_toolkits.mplot3d import Axes3D
 import math
-from mayavi import mlab
 import icosahedron as ico
 from collada import *
+import ConfigParser
 
-def create_ellipsoid_prametric(a,b,c,ngrid=24):
+configfile=open('ellipsoids.cfg', 'r')
+lines =configfile.readlines()
+configfile.close()
+
+data={}
+headers=lines[0]
+params=headers.split()
+for p in params:
+    data[p]={}
+
+i=0
+name={}
+for line in lines[1:]:
+    words = line.split()
+    key = i
+    i += 1
+    name = words[0]
+    values = words[1:]
+    for p, v in zip(params, values):
+        if v != 'n/a':
+            data[p][name] = float(v)
+# The above code reads in data by rows? Should be columns!!
+            
+            
+
+def create_ellipsoid_parametric(a,b,c,ngrid=24):
     u = np.linspace(0, 2*np.pi, num=ngrid, endpoint=True)
     v = np.linspace(0, np.pi, num=ngrid, endpoint=True)
 
@@ -18,7 +41,43 @@ def create_ellipsoid_prametric(a,b,c,ngrid=24):
     
     return (x,y,z)
     
+def merge_collada_files(list_fpath_inputs, fpath_output):
+    '''
+    code lifted from:
+    https://groups.google.com/forum/#!topic/pycollada/SEC_TQbpRgQ
+    '''
+    list_collada_objects = []
+    for fpath_input in list_fpath_inputs:
+        list_collada_objects.append(collada.Collada(fpath_input))
+    merged_collada_object = merge_collada_objects(list_collada_objects)
+    merged_collada_object.write(fpath_output)
+
+def merge_collada_objects(list_collada_objects):
+    '''
+    code lifted from:
+    https://groups.google.com/forum/#!topic/pycollada/SEC_TQbpRgQ
+    ''' 
+    merged_collada_object = collada.Collada()  
     
+    if len(list_collada_objects) == 0:
+        return merged_collada_object
+   
+    merged_collada_object.assetInfo = list_collada_objects[0].assetInfo
+
+    list_nodes_of_scene = []
+    for mesh in list_collada_objects:
+        merged_collada_object.effects.extend(mesh.effects)
+        merged_collada_object.materials.extend(mesh.materials)
+        merged_collada_object.geometries.extend(mesh.geometries)
+       
+        for scene in mesh.scenes:
+            list_nodes_of_scene.extend(scene.nodes)         
+       
+    myscene = collada.scene.Scene("myscene", list_nodes_of_scene)
+    merged_collada_object.scenes.append(myscene)
+    merged_collada_object.scene = myscene       
+           
+    return merged_collada_object
     
 def rotate_point_about_xaxis(alpha, point):
     """Returns a point rotated by alpha radians about the x axis.
@@ -93,32 +152,45 @@ beta =np.pi/4  # 90 degrees
 gamma=np.pi/3  # 90 degrees 
     
 # Scale to ellipsoid
-for i in range(3*NT):
-    TP[i,0]=coeffs[0]*TP[i,0]
-    TP[i,1]=coeffs[1]*TP[i,1]
-    TP[i,2]=coeffs[2]*TP[i,2]
+TP=ico.stretch(TP,coeffs[0],coeffs[1],coeffs[2])
+
+# Scale to ellipsoid and normals
+u=np.array([1.,0.,0.])
+TP=ico.rotate_about_u(TP,alpha,u)
+NP=ico.rotate_about_u(NP,alpha,u)
+
+u=np.array([math.cos(alpha),(-1)*math.sin(alpha),0.])
+TP=ico.rotate_about_u(TP,beta,u)
+NP=ico.rotate_about_u(NP,beta,u)
+
+u=np.array([math.sin(alpha)*math.cos(beta),
+            math.cos(alpha)*math.cos(beta),
+           (-1.)*math.sin(beta)*math.cos(alpha)])
+TP=ico.rotate_about_u(TP,gamma,u)
+NP=ico.rotate_about_u(NP,gamma,u)
+
 
 # Rotate about x-axis, rotated points now stored in [xyz]r1
 # Perform rotation on individual points about X-axis
-u=np.array([1.,0.,0.])
-for i in range(3*NT):
-    (TP[i,0],TP[i,1],TP[i,2]) = rotate_point_about_u(-1.*alpha,[TP[i,0],TP[i,1],TP[i,2]],u)
+#u=np.array([1.,0.,0.])
+#for i in range(3*NT):
+#    (TP[i,0],TP[i,1],TP[i,2]) = rotate_point_about_u(-1.*alpha,[TP[i,0],TP[i,1],TP[i,2]],u)
 
 
 # Rotate about object's x-axis, rotated points now stored in [xyz]r2
 # Perform rotation on individual points about u
-u=np.array([math.cos(alpha),(-1)*math.sin(alpha),0.])
-for i in range(3*NT):
-    (TP[i,0],TP[i,1],TP[i,2]) = rotate_point_about_u(-1.*beta,[TP[i,0],TP[i,1],TP[i,2]],u);
+#u=np.array([math.cos(alpha),(-1)*math.sin(alpha),0.])
+#for i in range(3*NT):
+#    (TP[i,0],TP[i,1],TP[i,2]) = rotate_point_about_u(-1.*beta,[TP[i,0],TP[i,1],TP[i,2]],u);
 
        
 # Rotate about object's x-axis, rotated points now stored in [xyz]r2
 # Perform rotation on individual points about u
-u=np.array([math.sin(alpha)*math.cos(beta),
-            math.cos(alpha)*math.cos(beta),
-           (-1.)*math.sin(beta)*math.cos(alpha)])
-for i in range(3*NT):
-    (TP[i,0],TP[i,1],TP[i,2]) = rotate_point_about_u(1.*gamma,[TP[i,0],TP[i,1],TP[i,2]],u);
+#u=np.array([math.sin(alpha)*math.cos(beta),
+#            math.cos(alpha)*math.cos(beta),
+#           (-1.)*math.sin(beta)*math.cos(alpha)])
+#for i in range(3*NT):
+#    (TP[i,0],TP[i,1],TP[i,2]) = rotate_point_about_u(1.*gamma,[TP[i,0],TP[i,1],TP[i,2]],u);
                 
      
      

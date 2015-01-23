@@ -8,15 +8,121 @@ Created on Wed Jan 21 08:52:03 2015
 import numpy as np
 import math
 
+#///////////////////////////////////////////////////////////////////////////// 
 def normalize(P):
     """
     Nomalizes a point
     
     """ 
     return P/math.sqrt(np.sum(P**2))
+#///////////////////////////////////////////////////////////////////////////// 
+def translate(I,x,y,z):
+    """
+    translate icosahedron I by x,y,z
     
+    """ 
+#///////////////////////////////////////////////////////////////////////////// 
+def stretch(I,A,B,C):
+    """
+    stretch icosahedron I by a factor of A,B,C along x,y,z axes respectively
     
+    """     
+    for i in range(len(I)):
+        I[i,0]=A*I[i,0]
+        I[i,1]=B*I[i,1]
+        I[i,2]=C*I[i,2]
     
+    return I
+#///////////////////////////////////////////////////////////////////////////// 
+def rotate_point_about_xaxis(alpha, point):
+    """Returns a point rotated by alpha radians about the x axis.
+    
+    """
+    Rx=np.array([[             1,                0,               0 ],
+                 [             0,  math.cos(alpha), math.sin(alpha) ],
+                 [             0, -math.sin(alpha), math.cos(alpha) ]])
+    
+    return np.dot(Rx,np.transpose(point));
+#/////////////////////////////////////////////////////////////////////////////    
+def rotate_point_about_yaxis(beta, point):
+    """Returns a point rotated by beta radians about the y axis.
+    
+    """
+    Ry=np.array([[  np.cos(beta),              0, -np.sin(beta) ],
+                 [             0,              1,             0 ],
+                 [  np.sin(beta),              0,  np.cos(beta) ]])
+    
+    return np.dot(Ry,np.transpose(point));
+#///////////////////////////////////////////////////////////////////////////// 
+def rotate_point_about_zaxis(gamma, point):
+    """Returns a point rotated by gamma radians about the z axis.
+    
+    """
+    Rz=np.array([[ np.cos(gamma),  np.sin(gamma),             0 ],
+                 [-np.sin(gamma),  np.cos(gamma),             0 ],
+                 [             0,              0,             1 ]])
+    
+    return np.dot(Rz,np.transpose(point));
+ #/////////////////////////////////////////////////////////////////////////////   
+def rotate_point_about_u(theta, point, u):
+    """Returns a point rotated by angle theta about vector u.
+    
+    """ 
+    c=math.cos(theta)
+    s=math.sin(theta)
+    ux=u[0]
+    uy=u[1]
+    uz=u[2]
+    ux2=u[0]*u[0]
+    uy2=u[1]*u[1]
+    uz2=u[2]*u[2]
+
+    R=np.array([[ c+ux2*(1.-c)      ,  ux*uy*(1.-c) -uz*s, ux*uz*(1.-c)+uy*s ],
+                [ uy*ux*(1-c) + uz*s,  c+uy2*(1.-c)      , uy*uz*(1.-c)-ux*s ],
+                [ uz*ux*(1.-c)-uy*s ,  uz*uy*(1.-c)+ux*s , c+uz2*(1.-c)      ]])
+    
+    return np.dot(R,np.transpose(point));
+#///////////////////////////////////////////////////////////////////////////// 
+def rotate_about_xaxis(I,alpha):
+    """
+    Rotate all points of icosahedron I by alpha radians about the x axis
+    
+    """     
+    for i in range(len(I)):
+        (I[i,0],I[i,1],I[i,2]) = rotate_point_about_xaxis(-1.*alpha,[I[i,0],I[i,1],I[i,2]])
+    
+    return I
+#///////////////////////////////////////////////////////////////////////////// 
+def rotate_about_yaxis(I,beta):
+    """
+    Rotate all points of icosahedron I by beta radians about the y axis
+    
+    """     
+    for i in range(len(I)):
+        (I[i,0],I[i,1],I[i,2]) = rotate_point_about_yaxis(-1.*beta,[I[i,0],I[i,1],I[i,2]])
+    
+    return I
+#///////////////////////////////////////////////////////////////////////////// 
+def rotate_about_zaxis(I,gamma):
+    """
+    Rotate all points of icosahedron I by gamma radians about the z axis
+    
+    """     
+    for i in range(len(I)):
+        (I[i,0],I[i,1],I[i,2]) = rotate_point_about_zaxis(gamma,[I[i,0],I[i,1],I[i,2]])
+    
+    return I
+#///////////////////////////////////////////////////////////////////////////// 
+def rotate_about_u(I,theta,u):
+    """
+    Rotate all points of icosahedron I by theta radians about the vector u
+    
+    """     
+    for i in range(len(I)):
+        (I[i,0],I[i,1],I[i,2]) = rotate_point_about_u(theta,[I[i,0],I[i,1],I[i,2]],u)
+    
+    return I
+#///////////////////////////////////////////////////////////////////////////// 
 def create_icosahedron(ngrid=24):
     """
     Creates an icosahedron
@@ -278,11 +384,8 @@ def create_icosahedron(ngrid=24):
     #    indices[3*i+1,1]=i
     #    indices[3*i+2,1]=i
 
-    return TP,NP,indices,NT
-    
-    
-    
-      
+    return TP,NP,indices,NT 
+#/////////////////////////////////////////////////////////////////////////////  
 def create_icosahedron_optimized(ngrid=24):
     """
     Creates an icosahderon
@@ -543,3 +646,4 @@ def create_icosahedron_optimized(ngrid=24):
     #    indices[3*i+2,1]=i
 
     return TP,NP,indices,NT  
+#///////////////////////////////////////////////////////////////////////////// 
