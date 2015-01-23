@@ -75,7 +75,7 @@ def rotate_point_about_u(theta, point, u):
 
 
 # Google-Earth has a limits of 64k vertices
-(TP,NP,indices,NT) = ico.create_icosahedron_optimized(16)
+(TP,NP,indices,NT) = ico.create_icosahedron_optimized(8)
 
 ########################################
 ########################################
@@ -119,24 +119,7 @@ u=np.array([math.sin(alpha)*math.cos(beta),
            (-1.)*math.sin(beta)*math.cos(alpha)])
 for i in range(3*NT):
     (TP[i,0],TP[i,1],TP[i,2]) = rotate_point_about_u(1.*gamma,[TP[i,0],TP[i,1],TP[i,2]],u);
-                 
-       
-#mlab.points3d(TP[:,0], TP[:,0], TP[:,0], color=(1.0, 1.0, 0.0))
-#x=TP[:,0]
-#y=TP[:,1]
-#z=TP[:,2]
-#tmp1=indices[0::2]
-#tind=np.array((tmp1[0::3],tmp1[1::3],tmp1[2::3]))
-#x.reshape((3*len(x),1))
-#y.reshape((3*len(y),1))
-#z.reshape((3*len(z),1))
-#mlab.triangular_mesh(x, y, z, tind.reshape((1280,3)))
-#mlab.show()
-
-
-
-# convert to collada
-#
+                
      
      
 mesh = Collada()
@@ -173,43 +156,19 @@ mesh.write('/home/sacim/ellipsoid.dae')
 
 
 
+# Create a KML document
+from simplekml import Kml, Model, AltitudeMode, Orientation, Scale
 
+kml = Kml()
+kml.document.name = "Ellipsoids"
 
+mod = kml.newmodel(altitudemode=AltitudeMode.relativetoground,
+                   #address=r'/home/sacim/ellipsoid.dae',
+                   location="<longitude>-3.0722</longitude><latitude>51.5333</latitude><altitude>15.0</altitude>",
+                   visibility=1,
+                   )
+mod.link.href="files/ellipsoid.dae"
+kml.addfile("/home/sacim/ellipsoid.dae")
 
-
-
-
-'''
-
-# The model path and scale variables
-car_dae = r'http://simplekml.googlecode.com/hg/samples/resources/car-model.dae'
-car_scale = 1.0
-
-# Create the KML document
-kml = Kml(name="Car", open=1)
-
-# Create the model
-model_car = Model(altitudemode=AltitudeMode.clamptoground,
-                            orientation=Orientation(heading=75.0),
-                            scale=Scale(x=car_scale, y=car_scale, z=car_scale))
-
-# Create the track
-trk = kml.newgxtrack(name="Tumbler", altitudemode=AltitudeMode.clamptoground,
-                     description="Model from: http://sketchup.google.com/3dwarehouse/details?mid=88a57c5396d3703dec0b522a48034ff2")
-
-# Attach the model to the track
-trk.model = model_car
-trk.model.link.href = car_dae
-
-# Add all the information to the track
-trk.newwhen(car_info["when"])
-trk.newgxcoord(car_info["coord"])
-
-# Turn-off default icon and text and hide the linestring
-trk.iconstyle.icon.href = ""
-trk.labelstyle.scale = 0
-trk.linestyle.width = 0
-
-# Saving
-kml.save("/home/sacim/testSimpleKML.kml")
-'''
+print kml.kml()
+kml.savekmz("/home/sacim/testSimpleKML.kmz")

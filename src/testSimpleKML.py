@@ -51,7 +51,7 @@ car_info = {"coord" : [
 }
 
 # The model path and scale variables
-car_dae = r'http://simplekml.googlecode.com/hg/samples/resources/car-model.dae'
+car_dae = r'/home/sacim/ellipsoid.dae'
 car_scale = 1.0
 
 # Create the KML document
