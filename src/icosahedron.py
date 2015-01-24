@@ -8,6 +8,10 @@ Created on Wed Jan 21 08:52:03 2015
 import numpy as np
 import math
 
+class Icosahedron:
+    def __init__(self, ngrid):
+        self.ngrid = ngrid
+
 #///////////////////////////////////////////////////////////////////////////// 
 def normalize(P):
     """
