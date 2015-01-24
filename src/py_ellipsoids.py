@@ -5,28 +5,29 @@ import icosahedron as ico
 from collada import *
 import ConfigParser
 
-configfile=open('ellipsoids.cfg', 'r')
-lines =configfile.readlines()
-configfile.close()
 
-data={}
-headers=lines[0]
-params=headers.split()
-for p in params:
-    data[p]={}
+def parse_config():
+    configfile=open('ellipsoids.cfg', 'r')
+    lines =configfile.readlines()
+    configfile.close()
 
-i=0
-name={}
-for line in lines[1:]:
-    words = line.split()
-    key = i
-    i += 1
-    name = words[0]
-    values = words[1:]
-    for p, v in zip(params, values):
-        if v != 'n/a':
-            data[p][name] = float(v)
-# The above code reads in data by rows? Should be columns!!
+    data={}
+    header=lines[0]
+    params=header.split()
+
+    name={}
+    for line in lines[1:]:
+        if line == '\n':
+            continue
+        words = line.split()
+        name = words[0]
+        values = words[1:]
+        data[name]={}
+        for p, v in zip(params, values):
+            if v != 'n/a':
+                data[name][p] = float(v)
+
+    return data
             
             
 
@@ -133,6 +134,7 @@ def rotate_point_about_u(theta, point, u):
 
 
 
+data=parse_config()
 # Google-Earth has a limits of 64k vertices
 (TP,NP,indices,NT) = ico.create_icosahedron_optimized(8)
 
