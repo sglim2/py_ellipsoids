@@ -81,75 +81,71 @@ def merge_collada_objects(list_collada_objects):
  
  
 
-(name,data)=parse_config()
+
+
+(names,data)=parse_config()
 # Google-Earth has a limits of 64k vertices
-TP=NP=indices=Ellipsoid={}
-#(TP,NP,indices,NT) = ico.create_icosahedron_optimized(24)
 
-Ellipsoid=Icosahedron(24)
-
-coeffs=np.array((25.,50.,100.))
-
-# Define rotations
-alpha=np.pi/5  # 90 degrees 
-beta =np.pi/4  # 90 degrees 
-gamma=np.pi/3  # 90 degrees 
+Ellipsoids={}
+for i in range(len(names)):
+    # instantiate
+    Ellipsoids[i]=Icosahedron(16,names[i])
     
-# Scale to ellipsoid
-#TP=ico.stretch(TP,coeffs[0],coeffs[1],coeffs[2])
-Ellipsoid.stretch(coeffs[0],coeffs[1],coeffs[2])
+    # re-shape
+    Ellipsoids[i].stretch(data[names[i]]['A'],
+                          data[names[i]]['B'],
+                          data[names[i]]['C'])
+    
+    #Define Rotations
+    alpha=data[names[i]]['alpha'] 
+    beta =data[names[i]]['beta'] 
+    gamma=data[names[i]]['gamma']
 
-
-u=np.array([1.,0.,0.])
-#TP=ico.rotate_about_u(TP,alpha,u)
-#NP=ico.rotate_about_u(NP,alpha,u)
-Ellipsoid.rotate_about_u(alpha,u)
-
-u=np.array([math.cos(alpha),(-1)*math.sin(alpha),0.])
-#TP=ico.rotate_about_u(TP,beta,u)
-#NP=ico.rotate_about_u(NP,beta,u)
-Ellipsoid.rotate_about_u(beta,u)
-
-u=np.array([math.sin(alpha)*math.cos(beta),
-            math.cos(alpha)*math.cos(beta),
-           (-1.)*math.sin(beta)*math.cos(alpha)])
-#TP=ico.rotate_about_u(TP,gamma,u)
-#NP=ico.rotate_about_u(NP,gamma,u)
-Ellipsoid.rotate_about_u(gamma,u)
-
-
-     
-mesh = Collada()
-effect = material.Effect("effect0", [], "phong", diffuse=(1,0,0), specular=(0,1,0))
-mat = material.Material("material0", "mymaterial", effect)
-mesh.effects.append(effect)
-mesh.materials.append(mat)
+    u=np.array([1.,0.,0.])
+    Ellipsoids[i].rotate_about_u(alpha,u)
     
     
-vert_src = source.FloatSource("triverts-array", np.array(Ellipsoid.TP), ('X', 'Y', 'Z'))
-normal_src = source.FloatSource("trinormals-array", np.array(Ellipsoid.NP), ('X', 'Y', 'Z'))
-
-geom = geometry.Geometry(mesh, "geometry0", "mytri", [vert_src, normal_src])
-
-
-input_list = source.InputList()
-input_list.addInput(0, 'VERTEX', "#triverts-array")
-input_list.addInput(1, 'NORMAL', "#trinormals-array")
+    u=np.array([math.cos(alpha),(-1)*math.sin(alpha),0.])
+    Ellipsoids[i].rotate_about_u(beta,u)
+    
+    u=np.array([math.sin(alpha)*math.cos(beta),
+                math.cos(alpha)*math.cos(beta),
+                (-1.)*math.sin(beta)*math.cos(alpha)])
+    Ellipsoids[i].rotate_about_u(gamma,u)
 
 
-triset = geom.createTriangleSet(Ellipsoid.indices, input_list, "materialref")
-geom.primitives.append(triset)
-mesh.geometries.append(geom)
+    # Create Collada Object and writer to tmp file
+    mesh = Collada()
+    effect = material.Effect("effect0", [], "phong", diffuse=(1,0,0), specular=(0,1,0))
+    mat = material.Material("material0", "mymaterial", effect)
+    mesh.effects.append(effect)
+    mesh.materials.append(mat)
+      
+    vert_src = source.FloatSource("triverts-array", np.array(Ellipsoids[i].TP), ('X', 'Y', 'Z'))
+    normal_src = source.FloatSource("trinormals-array", np.array(Ellipsoids[i].NP), ('X', 'Y', 'Z'))
 
-matnode = scene.MaterialNode("materialref", mat, inputs=[])
-geomnode = scene.GeometryNode(geom, [matnode])
-node = scene.Node("node0", children=[geomnode])
+    geom = geometry.Geometry(mesh, "geometry0", "mytri", [vert_src, normal_src])
 
-myscene = scene.Scene("myscene", [node])
-mesh.scenes.append(myscene)
-mesh.scene = myscene
+    input_list = source.InputList()
+    input_list.addInput(0, 'VERTEX', "#triverts-array")
+    input_list.addInput(1, 'NORMAL', "#trinormals-array")
 
-mesh.write('/home/sacim/ellipsoid.dae')
+    triset = geom.createTriangleSet(Ellipsoids[i].indices, input_list, "materialref")
+    geom.primitives.append(triset)
+    mesh.geometries.append(geom)
+
+    matnode = scene.MaterialNode("materialref", mat, inputs=[])
+    geomnode = scene.GeometryNode(geom, [matnode])
+    node = scene.Node("node0", children=[geomnode])
+
+    myscene = scene.Scene("myscene", [node])
+    mesh.scenes.append(myscene)
+    mesh.scene = myscene
+
+    mesh.write('/home/sacim/'+Ellipsoids[i].name+'.dae')
+
+
+
 
 
 
@@ -159,13 +155,26 @@ from simplekml import Kml, Model, AltitudeMode, Orientation, Scale
 kml = Kml()
 kml.document.name = "Ellipsoids"
 
-mod = kml.newmodel(altitudemode=AltitudeMode.relativetoground,
-                   #address=r'/home/sacim/ellipsoid.dae',
-                   location="<longitude>-3.0722</longitude><latitude>51.5333</latitude><altitude>15.0</altitude>",
-                   visibility=1,
-                   )
-mod.link.href="files/ellipsoid.dae"
-kml.addfile("/home/sacim/ellipsoid.dae")
+                   
+for i in range(len(names)):
+    mod = kml.newmodel(altitudemode=AltitudeMode.relativetoground,
+                       location='<longitude>'+repr(data[names[i]]['lon'])+'</longitude>'+
+                                '<latitude>'+repr(data[names[i]]['lat'])+'</latitude>'+
+                                '<altitude>'+repr(data[names[i]]['alt'])+'</altitude>',
+                       visibility=1,
+                       )
+    mod.link.href=('files/'+Ellipsoids[i].name+'.dae')
+    kml.addfile('/home/sacim/'+Ellipsoids[i].name+'.dae')
 
 print kml.kml()
-kml.savekmz("/home/sacim/testSimpleKML.kmz")
+kml.savekmz("/home/sacim/Ellipsoids.kmz")
+
+
+
+
+########################
+########################
+########################
+
+
+

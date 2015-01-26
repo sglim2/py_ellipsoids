@@ -11,7 +11,8 @@ import math
 
 class Icosahedron:
 #=============================================================================
-    def __init__(self, ngrid=24):
+    def __init__(self, ngrid=24, name='ellipsoid'):
+        self.name    = name                 # A short name op our icosahedron
         self.ngrid   = ngrid                # grid size for each domain
         self.NT      = 10*2*ngrid**2        # Number of triangles
         self.TP      = np.zeros((3*self.NT,3))   # Vertices fo triangles
@@ -344,11 +345,14 @@ class Icosahedron:
                                                          self.TP[i,1],
                                                          self.TP[i,2]],
                                                         u)
-    
-        #self.TP[:,:] =  np.dot(R,np.transpose(self.TP[:,:]))
-        #self.NP[:,:] =  np.dot(R,np.transpose(self.NP[:,:]))
- 
- 
+            (self.NP[i,0],
+             self.NP[i,1],
+             self.NP[i,2]) = rotate_point_about_u(theta,[self.NP[i,0],
+                                                         self.NP[i,1],
+                                                         self.NP[i,2]],
+                                                        u)
+#=============================================================================
+  
  
 #///////////////////////////////////////////////////////////////////////////// 
 def normalize(P):
