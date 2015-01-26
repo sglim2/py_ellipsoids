@@ -27,59 +27,7 @@ def parse_config():
                 data[name[key]][p] = float(v)
         key += 1
     return name,data
-            
-            
 
-def create_ellipsoid_parametric(a,b,c,ngrid=24):
-    u = np.linspace(0, 2*np.pi, num=ngrid, endpoint=True)
-    v = np.linspace(0, np.pi, num=ngrid, endpoint=True)
-
-    # Cartesian representation of data
-    x = a * np.outer(np.cos(u), np.sin(v))
-    y = b * np.outer(np.sin(u), np.sin(v))
-    z = c * np.outer(np.ones_like(u), np.cos(v))
-    
-    return (x,y,z)
-    
-def merge_collada_files(list_fpath_inputs, fpath_output):
-    '''
-    code lifted from:
-    https://groups.google.com/forum/#!topic/pycollada/SEC_TQbpRgQ
-    '''
-    list_collada_objects = []
-    for fpath_input in list_fpath_inputs:
-        list_collada_objects.append(collada.Collada(fpath_input))
-    merged_collada_object = merge_collada_objects(list_collada_objects)
-    merged_collada_object.write(fpath_output)
-
-def merge_collada_objects(list_collada_objects):
-    '''
-    code lifted from:
-    https://groups.google.com/forum/#!topic/pycollada/SEC_TQbpRgQ
-    ''' 
-    merged_collada_object = collada.Collada()  
-    
-    if len(list_collada_objects) == 0:
-        return merged_collada_object
-   
-    merged_collada_object.assetInfo = list_collada_objects[0].assetInfo
-
-    list_nodes_of_scene = []
-    for mesh in list_collada_objects:
-        merged_collada_object.effects.extend(mesh.effects)
-        merged_collada_object.materials.extend(mesh.materials)
-        merged_collada_object.geometries.extend(mesh.geometries)
-       
-        for scene in mesh.scenes:
-            list_nodes_of_scene.extend(scene.nodes)         
-       
-    myscene = collada.scene.Scene("myscene", list_nodes_of_scene)
-    merged_collada_object.scenes.append(myscene)
-    merged_collada_object.scene = myscene       
-           
-    return merged_collada_object
- 
- 
 
 
 
