@@ -9,7 +9,7 @@ Created on Mon Jan 26 09:41:29 2015
 import numpy as np
 import math
 
-class Icosahedron2:
+class Icosahedron:
 #=============================================================================
     def __init__(self, ngrid=24):
         self.ngrid   = ngrid                # grid size for each domain

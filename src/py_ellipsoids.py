@@ -1,10 +1,8 @@
 #!/bin/python
-import numpy as np
 import math
-import icosahedron as ico
+import numpy as np
 from collada import *
-import ConfigParser
-from icosahedron2 import Icosahedron2 
+from icosahedron import Icosahedron
 
 def parse_config():
     configfile=open('ellipsoids.cfg', 'r')
@@ -88,7 +86,7 @@ def merge_collada_objects(list_collada_objects):
 TP=NP=indices=Ellipsoid={}
 #(TP,NP,indices,NT) = ico.create_icosahedron_optimized(24)
 
-Ellipsoid=Icosahedron2(24)
+Ellipsoid=Icosahedron(24)
 
 coeffs=np.array((25.,50.,100.))
 
