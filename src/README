@@ -1,0 +1,5 @@
+
+Installation
+============
+
+pip install math numpy pycollada simplekml
