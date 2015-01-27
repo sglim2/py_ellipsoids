@@ -90,7 +90,7 @@ for i in range(len(names)):
     mesh.scenes.append(myscene)
     mesh.scene = myscene
 
-    mesh.write('/home/sacim/'+Ellipsoids[i].name+'.dae')
+    mesh.write('./'+Ellipsoids[i].name+'.dae')
 
 
 
@@ -112,10 +112,10 @@ for i in range(len(names)):
                        visibility=1,
                        )
     mod.link.href=('files/'+Ellipsoids[i].name+'.dae')
-    kml.addfile('/home/sacim/'+Ellipsoids[i].name+'.dae')
+    kml.addfile('./'+Ellipsoids[i].name+'.dae')
 
-print kml.kml()
-kml.savekmz("/home/sacim/Ellipsoids.kmz")
+#print kml.kml()
+kml.savekmz("./Ellipsoids.kmz")
 
 
 
