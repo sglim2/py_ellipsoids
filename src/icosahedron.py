@@ -9,10 +9,10 @@ Created on Mon Jan 26 09:41:29 2015
 import numpy as np
 import math
 
-class Icosahedron:
 #=============================================================================
-    def __init__(self, ngrid=24, name='ellipsoid'):
-        self.name    = name                 # A short name op our icosahedron
+class Icosahedron:
+    def __init__(self, ngrid, name='ellipsoid'):
+        self.name    = name                 # A short name of our icosahedron
         self.ngrid   = ngrid                # grid size for each domain
         self.NT      = 10*2*ngrid**2        # Number of triangles
         self.TP      = np.zeros((3*self.NT,3))   # Vertices fo triangles
@@ -23,7 +23,35 @@ class Icosahedron:
         
     def create_icosahedron(self):
         """
-        Creates an icosahderon        
+        Creates an icosahedron
+        
+        A regular icosahedron is initialized with 12 vertices defined by array
+        A (see code). This defines a regular icosahedron with vertices 
+        normalised to  unity. Each vertex is then rotated by Beta (see code)
+        about the y-axis. This gives us a regular icosahedron with 'poles' 
+        along the z-axis.
+        
+        From this point the icosahedron is split into 10 domains, consisting
+        of 2 joined equilateral trianlges, 5 with a vertex position at the 
+        north pole, and five with a vertex at the south pole.
+        
+        Within each domain, ngrid-1 geodesic points are calculated between 
+        adjacent vertices, giving ngrid+1 points along each domain edge.
+        
+        The remaining geodesic points are then calculated by walking through
+        suitable pairs of domain edge points, and calculating the suitable 
+        number of points between thes pairs.
+        
+        Each domain is split into triangles points and stored in a numpy array
+        TP. TP triplets consist of x, y, and z coordinates of thr calculated 
+        triangles.
+        
+        The numpy array NP holds the normal of each vertex of a TP triangle.
+        
+        the numpy array indices holds the indices of the triangles and their
+        associated normals in a format suitable for processing by the  
+        pycollada package.
+        
         """ 
         ngrid=self.ngrid
         a=1.
@@ -259,25 +287,53 @@ class Icosahedron:
 
 
 #============================================================================= 
+    def get_centre(self):
+        """
+        Finds the centre of the ellipsoid, simply by averaging two points 
+        lying on the (perhaps rotated) z semi-axis.
+        """
+        centre=np.zeros(3)
+        centre[0]=0.5*(self.TP[0,0]+self.TP[-2,0])
+        centre[1]=0.5*(self.TP[0,1]+self.TP[-2,1])
+        centre[2]=0.5*(self.TP[0,2]+self.TP[-2,2])    
+        
+        return centre
+#============================================================================= 
     def translate(self,x,y,z):
         """
         Shifts the origin by x,y,z
     
         """ 
-        return self
+        self.TP[:,0]=self.TP[:,0]+x
+        self.TP[:,1]=self.TP[:,1]+y
+        self.TP[:,2]=self.TP[:,2]+z
+        
 #============================================================================= 
     def translateTo(self,x,y,z):
         """
         Shifts the origin to x,y,z
     
         """ 
-        return self
+        centre=self.get_centre()
+        dx=x-centre[0]
+        dy=y-centre[1]
+        dz=z-centre[2]
+        
+        self.translate(dx,dy,dz)
+        
 #============================================================================= 
     def stretch(self,A,B,C):
         """
-        stretches the icosahedron by a factor of A,B,C along x,y,z axes respectively
+        Stretches the icosahedron by a factor of A,B,C along x,y,z axes respectively
+        
+        Before scaling, the icosahedron is centred at the origin, and returned
+        to its original position afterwards.
         
         """     
+        # translate to origin before stretch
+        centre=self.get_centre()
+        self.translateTo(0.,0.,0.)
+        
         self.TP[:,0]=A*self.TP[:,0]
         self.TP[:,1]=B*self.TP[:,1]
         self.TP[:,2]=C*self.TP[:,2]
@@ -286,7 +342,9 @@ class Icosahedron:
         self.NP[:,1]=B*self.NP[:,1]
         self.NP[:,2]=C*self.NP[:,2]
         
-        return self
+        # return to original position
+        self.translateTo(centre[0],centre[1],centre[2])
+        
 #============================================================================= 
     def rotate_about_xaxis(self, alpha):
         """
