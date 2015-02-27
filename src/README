@@ -2,4 +2,4 @@
 Installation
 ============
 
-pip install math numpy pycollada simplekml
+pip install -r requirements.txt
