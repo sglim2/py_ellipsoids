@@ -4,30 +4,39 @@ import numpy as np
 from collada import *
 from simplekml import Kml, Model, AltitudeMode, Orientation, Scale
 from icosahedron import Icosahedron
+import argparse, os
 
-def parse_config():
+# Parse input args ############
+parser = argparse.ArgumentParser(description='Builds user-defined ellipsoids as Collada objects, and outputs a google kmz file containing these objects.')
+parser.add_argument('-i', '--input', help='The input file.')
+parser.add_argument('-o', '--output', help='The output file.')
+parser.add_argument('--keep', action='store_true', help='Do not delete the intermediate collada files.')
+args = parser.parse_args()
+
+nokeepfiles=True
+if (args.keep):
+   nokeepfiles=False
+###############################
+
+def parse_config(inputfile):
     """
     Parses the config file. 
     
-    The config file should be named 
-      ellipsoids.cfg
-    and be located in your current working directory.
-    
     The config file is a plain text file consisting of a table of values, with 
-    headings. Each row defines an ellipsoid, and each colum describes 
+    headings. Each row defines an ellipsoid, and each column describes 
     properties of that ellipsoid. 
     The first column has no heading, and is the ellipsoid name or description
     (no spaces permitted). The remianing columns each have a heading, and may 
     be in any order. The headings are (with descriptions):
-        A       (Ellispoid semi-axis along the x-direction)
-        B       (Ellispoid semi-axis along the y-direction)
-        C       (Ellispoid semi-axis along the z-direction)
-        lat     (Lattitude position of the centre of the ellispsoid)
-        lon     (Longitude position of the centre of the ellispsoid)
+        A       (Ellipsoid semi-axis along the x-direction)
+        B       (Ellipsoid semi-axis along the y-direction)
+        C       (Ellipsoid semi-axis along the z-direction)
+        lat     (Latitude position of the centre of the ellipsoid)
+        lon     (Longitude position of the centre of the ellipsoid)
         alt     (Altitude position of the centre of the ellispsoid, relative to the ground)
         alpha   (Rotation, in radians, about the x-axis)
-        beta    (Rotation, in radians, about the x-axis)
-        gamma   (Rotation, in radians, about the x-axis)
+        beta    (Rotation, in radians, about the y-axis)
+        gamma   (Rotation, in radians, about the z-axis)
         
     Rotations of the ellipsoid are performed in the order: rotation about 
     x-axis, then y, then z.
@@ -38,7 +47,7 @@ def parse_config():
       name: 
     
     """
-    configfile=open('ellipsoids.cfg', 'r')
+    configfile=open(inputfile, 'r')
     lines =configfile.readlines()
     configfile.close()
 
@@ -60,6 +69,7 @@ def parse_config():
                 data[name[key]][p] = float(v)
         key += 1
     return name,data
+
 
 def write_collada_file(T,N,ind,name):
     """
@@ -104,7 +114,7 @@ def write_collada_file(T,N,ind,name):
 
 
 # Parse input file ##############################
-(names,data)=parse_config()
+(names,data)=parse_config(args.input)
 
 Ellipsoids={}
 for i in range(len(names)):
@@ -158,6 +168,8 @@ for i in range(len(names)):
     mod.link.href=('files/'+Ellipsoids[i].name+'.dae')
     kml.addfile('./'+Ellipsoids[i].name+'.dae')
 
-kml.savekmz("./Ellipsoids.kmz")
-
-
+kml.savekmz(args.output)
+if (nokeepfiles):
+    # Remove all intermediate Collada Files
+    for i in range(len(names)):
+       os.remove('./'+Ellipsoids[i].name+'.dae')
