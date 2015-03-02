@@ -17,7 +17,7 @@ class Icosahedron:
         self.NT      = 10*2*ngrid**2        # Number of triangles
         self.TP      = np.zeros((3*self.NT,3))   # Vertices fo triangles
         self.NP      = np.zeros((3*self.NT,3))   # Normal at each triangle vertex
-        self.indices = np.zeros(3*2*self.NT,dtype=int) # vertice and normal locations (for use with pycollada)
+        self.indices = np.zeros(3*2*self.NT,dtype=int) # vertex and normal locations (for use with pycollada)
         
         self.create_icosahedron()
         
@@ -40,10 +40,10 @@ class Icosahedron:
         
         The remaining geodesic points are then calculated by walking through
         suitable pairs of domain edge points, and calculating the suitable 
-        number of points between thes pairs.
+        number of points between these pairs.
         
-        Each domain is split into triangles points and stored in a numpy array
-        TP. TP triplets consist of x, y, and z coordinates of thr calculated 
+        Each domain is split into triangle points and stored in a numpy array
+        TP. TP triplets consist of x, y, and z coordinates of the calculated 
         triangles.
         
         The numpy array NP holds the normal of each vertex of a TP triangle.

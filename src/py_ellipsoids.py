@@ -8,14 +8,19 @@ import argparse, os
 
 # Parse input args ############
 parser = argparse.ArgumentParser(description='Builds user-defined ellipsoids as Collada objects, and outputs a google kmz file containing these objects.')
-parser.add_argument('-i', '--input', help='The input file.')
-parser.add_argument('-o', '--output', help='The output file.')
+#parser.add_argument('-i', '--input', nargs="?", help='The input file.')
+parser.add_argument('input', help='The input file.')
+parser.add_argument('output', help='The output file.')
+parser.add_argument('-r', '-res', '--resolution', type=int, default=16, help='The resolution of the generated ellipsoids.')
 parser.add_argument('--keep', action='store_true', help='Do not delete the intermediate collada files.')
 args = parser.parse_args()
 
 nokeepfiles=True
+ElRes=16
 if (args.keep):
    nokeepfiles=False
+if (args.resolution):
+   ElRes=args.resolution
 ###############################
 
 def parse_config(inputfile):
@@ -37,6 +42,9 @@ def parse_config(inputfile):
         alpha   (Rotation, in radians, about the x-axis)
         beta    (Rotation, in radians, about the y-axis)
         gamma   (Rotation, in radians, about the z-axis)
+        red     (red component of rgb colour: 0..1)
+        green   (green compnent of rgb colour: 0..1)
+        blue    (blue compnent of rgb colour: 0..1)
         
     Rotations of the ellipsoid are performed in the order: rotation about 
     x-axis, then y, then z.
@@ -71,7 +79,7 @@ def parse_config(inputfile):
     return name,data
 
 
-def write_collada_file(T,N,ind,name):
+def write_collada_file(T,N,ind,name,r,g,b):
     """
     Exports a vertex array, a normal array, and indices array to a collada file using pycollada.
     
@@ -84,7 +92,7 @@ def write_collada_file(T,N,ind,name):
     """
     # Create Collada Object and writer to tmp file
     mesh = Collada()
-    effect = material.Effect("effect0", [], "phong", diffuse=(1,0,0), specular=(0,1,0))
+    effect = material.Effect("effect0", [], "phong", diffuse=(r,g,b), specular=(0,1,0))
     mat = material.Material("material0", "mymaterial", effect)
     mesh.effects.append(effect)
     mesh.materials.append(mat)
@@ -120,7 +128,7 @@ Ellipsoids={}
 for i in range(len(names)):
     
     # instantiate #####################################
-    Ellipsoids[i]=Icosahedron(16,names[i])
+    Ellipsoids[i]=Icosahedron(ElRes,names[i])
     
     # re-shape ########################################
     Ellipsoids[i].stretch(data[names[i]]['A'],
@@ -149,9 +157,10 @@ for i in range(len(names)):
     write_collada_file(Ellipsoids[i].TP,
                        Ellipsoids[i].NP,
                        Ellipsoids[i].indices,
-                       name)
-
-
+                       name,
+                       data[names[i]]['red'],
+                       data[names[i]]['green'],
+                       data[names[i]]['blue'])
 
 
 # Create a KML document #########################
