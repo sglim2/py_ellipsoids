@@ -31,7 +31,7 @@ def parse_config(inputfile):
     headings. Each row defines an ellipsoid, and each column describes 
     properties of that ellipsoid. 
     The first column has no heading, and is the ellipsoid name or description
-    (no spaces permitted). The remianing columns each have a heading, and may 
+    (no spaces permitted). The remaining columns each have a heading, and may 
     be in any order. The headings are (with descriptions):
         A       (Ellipsoid semi-axis along the x-direction)
         B       (Ellipsoid semi-axis along the y-direction)
