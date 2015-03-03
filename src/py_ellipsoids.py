@@ -143,13 +143,12 @@ for i in range(len(names)):
     u=np.array([1.,0.,0.])
     Ellipsoids[i].rotate_about_u(alpha,u)
     
-    
-    u=np.array([math.cos(alpha),(-1)*math.sin(alpha),0.])
+    u=np.array([0.,math.cos(alpha),(+1)*math.sin(alpha),0.])
     Ellipsoids[i].rotate_about_u(beta,u)
-    
-    u=np.array([math.sin(alpha)*math.cos(beta),
-                math.cos(alpha)*math.cos(beta),
-                (-1.)*math.sin(beta)*math.cos(alpha)])
+
+    u=np.array([math.sin(beta)*math.cos(alpha),
+                (-1.)*math.sin(alpha)*math.cos(beta),
+                math.cos(alpha)*math.cos(beta)])
     Ellipsoids[i].rotate_about_u(gamma,u)
 
     # Write .dae files ###############################
