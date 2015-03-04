@@ -409,8 +409,33 @@ class Icosahedron:
                                                          self.NP[i,1],
                                                          self.NP[i,2]],
                                                         u)
+#============================================================================= 
+    def rotate_eulerZYX(self,alpha,beta,gamma):
+        """
+        Rotate icosahedron by theta radians about vector u
+        """ 
+        sa=math.sin(alpha)
+        sb=math.sin(beta)
+        sc=math.sin(gamma)
+        ca=math.cos(alpha)
+        cb=math.cos(beta)
+        cc=math.cos(gamma)
+       
+        R=np.array([[ cb*cc , ca*sc+cc*sa*sb , sa*sc-ca*cc*sb ],
+                    [-cb*sc , ca*cc-sa*sb*sc , cc*sa+ca*sb*sc ],
+                    [    sb ,         -cb*sa ,          ca*cb ]])
+    
+        for i in range(len(self.TP)):
+            point = [self.TP[i,0],self.TP[i,1],self.TP[i,2]]
+            (self.TP[i,0],
+             self.TP[i,1],
+             self.TP[i,2]) = np.dot(R,np.transpose(point))
+             
+            npoint = [self.NP[i,0],self.NP[i,1],self.NP[i,2]] 
+            (self.NP[i,0],
+             self.NP[i,1],
+             self.NP[i,2]) = np.dot(R,np.transpose(npoint))
 #=============================================================================
-  
  
 #///////////////////////////////////////////////////////////////////////////// 
 def normalize(P):
