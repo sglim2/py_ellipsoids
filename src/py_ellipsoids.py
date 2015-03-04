@@ -148,9 +148,9 @@ for i in range(len(names)):
 
     u=np.array([math.sin(beta)*math.cos(alpha),
                 (-1.)*math.sin(alpha)*math.cos(beta),
-                math.cos(alpha)*math.cos(beta)])
-    Ellipsoids[i].rotate_about_u(gamma,u)
-
+                math.cos(alpha)*math.cos(beta)])            
+    Ellipsoids[i].rotate_about_u(gamma,u)    
+       
     # Write .dae files ###############################
     name='./'+Ellipsoids[i].name+'.dae'
     write_collada_file(Ellipsoids[i].TP,
@@ -172,6 +172,7 @@ for i in range(len(names)):
                                 '<latitude>'+repr(data[names[i]]['lat'])+'</latitude>'+
                                 '<altitude>'+repr(data[names[i]]['alt'])+'</altitude>',
                        visibility=1,
+                       name=names[i]
                        )
     mod.link.href=('files/'+Ellipsoids[i].name+'.dae')
     kml.addfile('./'+Ellipsoids[i].name+'.dae')
