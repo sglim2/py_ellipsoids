@@ -149,7 +149,7 @@ for i in range(len(names)):
     u=np.array([math.sin(beta)*math.cos(alpha),
                 (-1.)*math.sin(alpha)*math.cos(beta),
                 math.cos(alpha)*math.cos(beta)])            
-    .rotate_about_u(gamma,u)    
+    Ellipsoids[i].rotate_about_u(gamma,u)    
    
 #    Ellipsoids[i].rotate_eulerZYX(alpha,0.0,gamma)
       
