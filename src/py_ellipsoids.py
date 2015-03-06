@@ -4,7 +4,7 @@ import numpy as np
 from collada import *
 from simplekml import Kml, Model, AltitudeMode, Orientation, Scale
 from icosahedron import Icosahedron
-import argparse, os
+import argparse, os, csv
 
 # Parse input args ############
 parser = argparse.ArgumentParser(description='Builds user-defined ellipsoids as Collada objects, and outputs a google kmz file containing these objects.')
@@ -23,6 +23,30 @@ if (args.resolution):
    ElRes=args.resolution
 ###############################
 
+def colours(colour):
+    """
+    Defines the rgb vaules of named colours
+    """
+    colours = {'white'  : np.array([1.00,1.00,1.00]),
+               'silver' : np.array([0.75,0.75,0.75]),
+               'grey'   : np.array([0.50,0.50,0.50]),
+               'gray'   : np.array([0.50,0.50,0.50]),
+               'black'  : np.array([0.00,0.00,0.00]),
+               'red'    : np.array([1.00,0.00,0.00]),
+               'maroon' : np.array([0.50,0.00,0.00]),
+               'yellow' : np.array([1.00,1.00,0.00]),
+               'olive'  : np.array([0.50,0.50,0.00]),
+               'lime'   : np.array([0.00,1.00,0.00]),
+               'green'  : np.array([0.00,0.50,0.00]),
+               'aqua'   : np.array([0.00,1.00,1.00]),
+               'teal'   : np.array([0.00,0.50,0.50]),
+               'blue'   : np.array([0.00,0.00,1.00]),
+               'navy'   : np.array([0.00,0.00,0.50]),
+               'fuchsia': np.array([1.00,0.00,1.00]),
+               'purple' : np.array([0.50,0.00,0.50])}
+   
+    return colours[colour]
+    
 def parse_config(inputfile):
     """
     Parses the config file. 
@@ -73,8 +97,10 @@ def parse_config(inputfile):
         values = words[1:]
         data[name[key]]={}
         for p, v in zip(params, values):
-            if v != 'n/a':
+            if p != 'colour':
                 data[name[key]][p] = float(v)
+            else:
+                data[name[key]][p] = v.lower()
         key += 1
     return name,data
 
@@ -148,13 +174,12 @@ for i in range(len(names)):
                 
     # Write .dae files ###############################
     name='./'+Ellipsoids[i].name+'.dae'
+    c=colours(data[names[i]]['colour'])
     write_collada_file(Ellipsoids[i].TP,
                        Ellipsoids[i].NP,
                        Ellipsoids[i].indices,
                        name,
-                       data[names[i]]['red'],
-                       data[names[i]]['green'],
-                       data[names[i]]['blue'])
+                       c[0],c[1],c[2])
 
 
 # Create a KML document #########################
