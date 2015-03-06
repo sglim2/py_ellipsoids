@@ -92,7 +92,7 @@ def write_collada_file(T,N,ind,name,r,g,b):
     """
     # Create Collada Object and writer to tmp file
     mesh = Collada()
-    effect = material.Effect("effect0", [], "phong", diffuse=(r,g,b), specular=(0,1,0))
+    effect = material.Effect("effect0", [], "phong", diffuse=(r,g,b))
     mat = material.Material("material0", "mymaterial", effect)
     mesh.effects.append(effect)
     mesh.materials.append(mat)
@@ -131,28 +131,21 @@ for i in range(len(names)):
     Ellipsoids[i]=Icosahedron(ElRes,names[i])
     
     # re-shape ########################################
-    Ellipsoids[i].stretch(data[names[i]]['A'],
-                          data[names[i]]['B'],
-                          data[names[i]]['C'])
+    ax=([data[names[i]]['A'],data[names[i]]['B'],data[names[i]]['C']])
+    ax.sort(key=float,reverse=True)
+    Ellipsoids[i].stretch(ax[0],ax[1],ax[2])
     
     #Define Rotations ################################
-    alpha=data[names[i]]['alpha'] 
-    beta =data[names[i]]['beta'] 
-    gamma=data[names[i]]['gamma']
-
-    u=np.array([1.,0.,0.])
-    Ellipsoids[i].rotate_about_u(alpha,u)
-    
-    u=np.array([0.,math.cos(alpha),(+1)*math.sin(alpha),0.])
-    Ellipsoids[i].rotate_about_u(beta,u)
-
-    u=np.array([math.sin(beta)*math.cos(alpha),
-                (-1.)*math.sin(alpha)*math.cos(beta),
-                math.cos(alpha)*math.cos(beta)])            
-    Ellipsoids[i].rotate_about_u(gamma,u)    
-   
-#    Ellipsoids[i].rotate_eulerZYX(alpha,0.0,gamma)
+    alpha=data[names[i]]['alpha']*math.pi/180.
+    beta =data[names[i]]['beta'] *math.pi/180.
+    gamma=data[names[i]]['gamma']*math.pi/180.
+  
+    # Rotate ellipsoid to match user-defined orientation 
+    Ellipsoids[i].rotate_AlphaBetaGamma(alpha,beta,gamma) 
       
+    # Rotate ellipsoid to match google-earth coordinates
+    Ellipsoids[i].rotate_eulerXY(math.pi,math.pi/2.)
+                
     # Write .dae files ###############################
     name='./'+Ellipsoids[i].name+'.dae'
     write_collada_file(Ellipsoids[i].TP,
