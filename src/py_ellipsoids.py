@@ -47,64 +47,6 @@ def colours(colour):
                'purple' : np.array([0.50,0.00,0.50])}
    
     return colours[colour]
-    
-def parse_config(inputfile):
-    """
-    Parses the config file. 
-    
-    The config file is a plain text file consisting of a table of values, with 
-    headings. Each row defines an ellipsoid, and each column describes 
-    properties of that ellipsoid. 
-    The first column has no heading, and is the ellipsoid name or description
-    (no spaces permitted). The remaining columns each have a heading, and may 
-    be in any order. The headings are (with descriptions):
-        A       (First ellipsoid semi-axis)
-        B       (Second ellipsoid semi-axis)
-        C       (Third ellipsoid semi-axis)
-        lat     (Latitude position of the centre of the ellipsoid)
-        lon     (Longitude position of the centre of the ellipsoid)
-        alt     (Altitude position of the centre of the ellispsoid, relative to
-                 the ground)
-        alpha   (Pitch of the ellipsoid, in degrees, about the y-axis (S-N))
-        beta    (Yaw of ellipsoid, in degrees, about the z-axis (altitude))
-        gamma   (Roll of the ellipsoid, in degrees, about the ellipsoids
-                 long semi-axis)
-        colour  (colour assigned to the ellipsoid. Any one of the pre-defined
-                 colours is allowed)
-        
-    Rotations of the ellipsoid are performed in the order: rotation about  
-    y-axis, then z, then the line of the ellipsoid's long semi-axis.    
-        
-    Returns:
-      data:
-      name: 
-    
-    """
-    configfile=open(inputfile, 'r')
-    lines =configfile.readlines()
-    configfile.close()
-
-    data={}
-    header=lines[0]
-    params=header.split()
-
-    name={}
-    key=0
-    for line in lines[1:]:
-        if line == '\n':
-            continue
-        words = line.split()
-        name[key] = words[0]
-        values = words[1:]
-        data[name[key]]={}
-        for p, v in zip(params, values):
-            if p != 'colour':
-                data[name[key]][p] = float(v)
-            else:
-                data[name[key]][p] = v.lower()
-        key += 1
-    return name,data
-
 
 def parse_csv(inputfile):
     """
@@ -113,21 +55,22 @@ def parse_csv(inputfile):
     The config file is a plain text csv file consisting of a table of values, 
     with headings. Each row defines an ellipsoid, and each column describes 
     properties of that ellipsoid. 
-    The first column has no heading, and is the ellipsoid name or description.
-    The remaining columns each have a heading, and may be in any order. The 
+    The columns each have a heading, and may be in any order. The 
     headings are (with descriptions):
-        A       (First ellipsoid semi-axis)
-        B       (Second ellipsoid semi-axis)
-        C       (Third ellipsoid semi-axis)
-        lat     (Latitude position of the centre of the ellipsoid)
-        lon     (Longitude position of the centre of the ellipsoid)
-        alt     (Altitude position of the centre of the ellispsoid, relative to
+    description (The name of the ellipsoid. When loaded into google-earth, this
+                 forms the 'Name' of the object in the 'Places' panel)
+    A           (First ellipsoid semi-axis)
+    B           (Second ellipsoid semi-axis)
+    C           (Third ellipsoid semi-axis)
+    lat         (Latitude position of the centre of the ellipsoid)
+    lon         (Longitude position of the centre of the ellipsoid)
+    alt         (Altitude position of the centre of the ellispsoid, relative to
                  the ground)
-        alpha   (Pitch of the ellipsoid, in degrees, about the y-axis (S-N))
-        beta    (Yaw of ellipsoid, in degrees, about the z-axis (altitude))
-        gamma   (Roll of the ellipsoid, in degrees, about the ellipsoids
+    alpha       (Pitch of the ellipsoid, in degrees, about the y-axis (S-N))
+    beta        (Yaw of ellipsoid, in degrees, about the z-axis (up-altitude))
+    gamma       (Roll of the ellipsoid, in degrees, about the ellipsoids
                  long semi-axis)
-        colour  (colour assigned to the ellipsoid. Any one of the pre-defined
+    colour      (colour assigned to the ellipsoid. Any one of the pre-defined
                  colours is allowed)
         
     Rotations of the ellipsoid are performed in the order: rotation about  
