@@ -1,6 +1,7 @@
 #!/bin/python
 import math
 import numpy as np
+import pandas as pd
 from collada import *
 from simplekml import Kml, Model, AltitudeMode, Orientation, Scale
 from icosahedron import Icosahedron
@@ -10,7 +11,7 @@ import argparse, os, csv
 parser = argparse.ArgumentParser(description='Builds user-defined ellipsoids as Collada objects, and outputs a google kmz file containing these objects.')
 #parser.add_argument('-i', '--input', nargs="?", help='The input file.')
 parser.add_argument('input', help='The input file.')
-parser.add_argument('output', help='The output file.')
+parser.add_argument('output', help='The output file. Output is in KMZ format')
 parser.add_argument('-r', '-res', '--resolution', type=int, default=16, help='The resolution of the generated ellipsoids.')
 parser.add_argument('--keep', action='store_true', help='Do not delete the intermediate collada files.')
 args = parser.parse_args()
@@ -57,22 +58,22 @@ def parse_config(inputfile):
     The first column has no heading, and is the ellipsoid name or description
     (no spaces permitted). The remaining columns each have a heading, and may 
     be in any order. The headings are (with descriptions):
-        A       (Ellipsoid semi-axis along the x-direction)
-        B       (Ellipsoid semi-axis along the y-direction)
-        C       (Ellipsoid semi-axis along the z-direction)
+        A       (First ellipsoid semi-axis)
+        B       (Second ellipsoid semi-axis)
+        C       (Third ellipsoid semi-axis)
         lat     (Latitude position of the centre of the ellipsoid)
         lon     (Longitude position of the centre of the ellipsoid)
-        alt     (Altitude position of the centre of the ellispsoid, relative to the ground)
-        alpha   (Rotation, in radians, about the x-axis)
-        beta    (Rotation, in radians, about the y-axis)
-        gamma   (Rotation, in radians, about the z-axis)
-        red     (red component of rgb colour: 0..1)
-        green   (green compnent of rgb colour: 0..1)
-        blue    (blue compnent of rgb colour: 0..1)
+        alt     (Altitude position of the centre of the ellispsoid, relative to
+                 the ground)
+        alpha   (Pitch of the ellipsoid, in degrees, about the y-axis (S-N))
+        beta    (Yaw of ellipsoid, in degrees, about the z-axis (altitude))
+        gamma   (Roll of the ellipsoid, in degrees, about the ellipsoids
+                 long semi-axis)
+        colour  (colour assigned to the ellipsoid. Any one of the pre-defined
+                 colours is allowed)
         
-    Rotations of the ellipsoid are performed in the order: rotation about 
-    x-axis, then y, then z.
-    
+    Rotations of the ellipsoid are performed in the order: rotation about  
+    y-axis, then z, then the line of the ellipsoid's long semi-axis.    
         
     Returns:
       data:
@@ -103,6 +104,43 @@ def parse_config(inputfile):
                 data[name[key]][p] = v.lower()
         key += 1
     return name,data
+
+
+def parse_csv(inputfile):
+    """
+    Parses the config file (csv format). 
+    
+    The config file is a plain text csv file consisting of a table of values, 
+    with headings. Each row defines an ellipsoid, and each column describes 
+    properties of that ellipsoid. 
+    The first column has no heading, and is the ellipsoid name or description.
+    The remaining columns each have a heading, and may be in any order. The 
+    headings are (with descriptions):
+        A       (First ellipsoid semi-axis)
+        B       (Second ellipsoid semi-axis)
+        C       (Third ellipsoid semi-axis)
+        lat     (Latitude position of the centre of the ellipsoid)
+        lon     (Longitude position of the centre of the ellipsoid)
+        alt     (Altitude position of the centre of the ellispsoid, relative to
+                 the ground)
+        alpha   (Pitch of the ellipsoid, in degrees, about the y-axis (S-N))
+        beta    (Yaw of ellipsoid, in degrees, about the z-axis (altitude))
+        gamma   (Roll of the ellipsoid, in degrees, about the ellipsoids
+                 long semi-axis)
+        colour  (colour assigned to the ellipsoid. Any one of the pre-defined
+                 colours is allowed)
+        
+    Rotations of the ellipsoid are performed in the order: rotation about  
+    y-axis, then z, then the line of the ellipsoid's long semi-axis.
+    
+        
+    Returns:
+      data:
+      name: 
+    
+    """
+    df = pd.read_csv(inputfile)
+    return df
 
 
 def write_collada_file(T,N,ind,name,r,g,b):
@@ -148,23 +186,23 @@ def write_collada_file(T,N,ind,name,r,g,b):
 
 
 # Parse input file ##############################
-(names,data)=parse_config(args.input)
+data=parse_csv(args.input)
 
 Ellipsoids={}
-for i in range(len(names)):
+for i in range(len(data)):
     
     # instantiate #####################################
-    Ellipsoids[i]=Icosahedron(ElRes,names[i])
+    Ellipsoids[i]=Icosahedron(ElRes,data['description'][i])
     
     # re-shape ########################################
-    ax=([data[names[i]]['A'],data[names[i]]['B'],data[names[i]]['C']])
+    ax=([data['A'][i],data['B'][i],data['C'][i]])
     ax.sort(key=float,reverse=True)
     Ellipsoids[i].stretch(ax[0],ax[1],ax[2])
     
     #Define Rotations ################################
-    alpha=data[names[i]]['alpha']*math.pi/180.
-    beta =data[names[i]]['beta'] *math.pi/180.
-    gamma=data[names[i]]['gamma']*math.pi/180.
+    alpha=data['alpha'][i]*math.pi/180.
+    beta =data['beta'][i] *math.pi/180.
+    gamma=data['gamma'][i]*math.pi/180.
   
     # Rotate ellipsoid to match user-defined orientation 
     Ellipsoids[i].rotate_AlphaBetaGamma(alpha,beta,gamma) 
@@ -174,7 +212,7 @@ for i in range(len(names)):
                 
     # Write .dae files ###############################
     name='./'+Ellipsoids[i].name+'.dae'
-    c=colours(data[names[i]]['colour'])
+    c=colours(data['colour'][i])
     write_collada_file(Ellipsoids[i].TP,
                        Ellipsoids[i].NP,
                        Ellipsoids[i].indices,
@@ -186,13 +224,13 @@ for i in range(len(names)):
 kml = Kml()
 kml.document.name = "Ellipsoids"
                    
-for i in range(len(names)):
+for i in range(len(data)):
     mod = kml.newmodel(altitudemode=AltitudeMode.relativetoground,
-                       location='<longitude>'+repr(data[names[i]]['lon'])+'</longitude>'+
-                                '<latitude>'+repr(data[names[i]]['lat'])+'</latitude>'+
-                                '<altitude>'+repr(data[names[i]]['alt'])+'</altitude>',
+                       location='<longitude>'+repr(data['lon'][i])+'</longitude>'+
+                                '<latitude>'+repr(data['lat'][i])+'</latitude>'+
+                                '<altitude>'+repr(data['alt'][i])+'</altitude>',
                        visibility=1,
-                       name=names[i]
+                       name=data['description'][i]
                        )
     mod.link.href=('files/'+Ellipsoids[i].name+'.dae')
     kml.addfile('./'+Ellipsoids[i].name+'.dae')
@@ -200,5 +238,5 @@ for i in range(len(names)):
 kml.savekmz(args.output)
 if (nokeepfiles):
     # Remove all intermediate Collada Files
-    for i in range(len(names)):
+    for i in range(len(data)):
        os.remove('./'+Ellipsoids[i].name+'.dae')
