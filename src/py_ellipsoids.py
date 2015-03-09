@@ -86,7 +86,7 @@ def parse_csv(inputfile):
     return df
 
 
-def write_collada_file(T,N,ind,name,r,g,b):
+def write_collada_file(T,N,ind,name,r,g,b,t):
     """
     Exports a vertex array, a normal array, and indices array to a collada file using pycollada.
     
@@ -95,11 +95,12 @@ def write_collada_file(T,N,ind,name,r,g,b):
       N (numpy array [:,3], float): vertex normals.
       ind (numpy array [:,2])     : Description of indices of T and N are collected in to triangles
       name                        : text string providing descriptive name of the collada model
+      r,g,b                       : colour components (r,g,b) of the ellipsoid (range 0..1)
       
     """
     # Create Collada Object and writer to tmp file
     mesh = Collada()
-    effect = material.Effect("effect0", [], "phong", diffuse=(r,g,b))
+    effect = material.Effect("effect0", [], "phong", diffuse=(r,g,b), transparent=(r,g,b), transparency=t)
     mat = material.Material("material0", "mymaterial", effect)
     mesh.effects.append(effect)
     mesh.materials.append(mat)
@@ -156,11 +157,12 @@ for i in range(len(data)):
     # Write .dae files ###############################
     name='./'+Ellipsoids[i].name+'.dae'
     c=colours(data['colour'][i])
+    t=(1.0)*data['transparency'][i].item()
     write_collada_file(Ellipsoids[i].TP,
                        Ellipsoids[i].NP,
                        Ellipsoids[i].indices,
                        name,
-                       c[0],c[1],c[2])
+                       c[0],c[1],c[2],t)
 
 
 # Create a KML document #########################
