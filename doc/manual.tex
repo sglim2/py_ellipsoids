@@ -1,0 +1,73 @@
+\documentclass[11pt]{article}
+\usepackage{verbatim}
+\title{\textbf{Py\_Ellipsoids}}
+\author{Ian Merrick\\
+		School of Earth and Ocean Sciences\\
+		Cardiff University\\
+		Wales, UK}
+\date{}
+\begin{document}
+
+\maketitle
+
+\section{Overview}
+The aim of this code is to represent any second order tensor as an ellipsoid for use in virtual globes (i.e. google-earth).
+
+The code is written in python and at its core uses the PyCollada\cite{pycollada} and SimpleKML\cite{simplekml} modules. The code takes a list of defined ellipsoids and creates a zipped KML\cite{kml} file with the ellipsoids embedded as COLLADA\cite{collada} objects.
+
+The code is tested with Python versions $2.7+$ and $3.4+$.
+
+\section{Installation}
+Check out the repository from bitbucket ({\em https://bitbucket.org/sglim2/py\_ellipsoids}). Assuming you already have python and python-pip installed and in your path, you can install all required modules with the command:
+\begin{verbatim}
+ # pip install -r requirements.txt
+\end{verbatim}
+
+\section{Usage}
+To run the application, from the command-line type:
+\begin{verbatim}
+ # python py_ellipsoids.py [-r RESOLUTION] [--keep] input output
+\end{verbatim}
+where {\em input} is the ellipsoid definition file, {\em output} is the resulting KMZ file, and {\em RESOLUTION} is the desired resolution of the ellipsoid grid. {\em input} and {\em output} are required arguments, {\em RESOLUTION} is optional and defaults to $16$.
+
+\section{The Ellipsoid Definition File}
+An example ellipsoid definition file is given:
+\verbatiminput{../src/ellipsoids_example3.csv}
+It is a comma-separated-value (csv) file with headings. The columns of the csv file may be in any order. A list of the required headings are given (with descriptions):
+\begin{table}[h]
+\begin{tabular}{rl}
+ description & (The name or short description of the ellipsoid/tensor)  \\
+ A           & (One of the 3 ellipsoid semi-axes lengths)  \\
+ B           & (One of the 3 ellipsoid semi-axes lengths)  \\
+ C           & (One of the 3 ellipsoid semi-axes lengths)  \\
+ lat         & (Global latitude position of the centre of the ellipsoid)  \\
+ lon         & (Global longitude position of the centre of the ellipsoid) \\
+ alt         & (Altitude of the ellipsoid relative to the ground at lat/lon)  \\
+ alpha       & (Angle in degrees of the pitch of the ellipsoid)  \\
+ beta        & (Angle in degrees of the trend of the ellipsoid)  \\
+ gamma       & (Angle in degrees of the roll of the ellipsoid)  \\
+ colour      & (One of any pre-defined colours)  \\
+ transparency& (The level of transparency of the ellipsoid (range 0..1))
+\end{tabular}
+\end{table}
+
+\subsection{Position and Orientation of the Ellipsoids}
+
+
+
+
+
+
+\begin{thebibliography}{1}
+
+  \bibitem{pycollada} PyCollada ({\em https://github.com/pycollada/pycollada}).
+
+  \bibitem{simplekml} SimpleKML ({\em https://code.google.com/p/simplekml}).
+  
+  \bibitem{kml} KML ({\em http://www.opengeospatial.org/standards/kml}).
+  
+  \bibitem{collada} COLLADA ({\em https://collada.org/}).
+
+\end{thebibliography}
+
+\end{document}
