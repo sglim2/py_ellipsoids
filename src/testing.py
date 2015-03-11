@@ -76,7 +76,9 @@ for i in range(len(data)):
                 Y=np.append(Y,Ellipsoids[i].TP[start,1])
                 Z=np.append(Z,Ellipsoids[i].TP[start,2])
                 
-                ax.plot(X,Y,Z,color=c[i],linestyle=ls[i],linewidth=lw[i])
+                #ax.plot(X,Y,Z,color=c[i],linestyle=ls[i],linewidth=lw[i])
+                ax.plot_trisurf(X,Y,Z,color=c[i],linestyle=ls[i],linewidth=lw[i])
+                
   
 ax.set_xlabel('X')
 ax.set_ylabel('Y')
