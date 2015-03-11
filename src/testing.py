@@ -13,16 +13,21 @@ from simplekml import Kml, Model, AltitudeMode, Orientation, Scale
 from icosahedron import Icosahedron
 import argparse, os, csv
 
+from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.pyplot as plt
+
 nokeepfiles=True
-ElRes=8
+ElRes=4
 
-data = pd.read_csv('ellipsoids_example3.csv')
+data = pd.read_csv('ellipsoids_example4.csv')
 
+fig = plt.figure()
 
 Ellipsoids={}
 for i in range(len(data)):
     
     # instantiate #####################################
+    #Ellipsoids[i]=Icosahedron(2**i,data['description'][i])
     Ellipsoids[i]=Icosahedron(ElRes,data['description'][i])
     
     # re-shape ########################################
@@ -40,20 +45,42 @@ for i in range(len(data)):
       
     # Rotate ellipsoid to match google-earth coordinates
     #Ellipsoids[i].rotate_eulerXY(math.pi,math.pi/2.)
-                
-    
-from mpl_toolkits.mplot3d import Axes3D
-import matplotlib.pyplot as plt
 
-i=0
-fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
-maxbound=max(data['A'][i],data['B'][i],data['C'][i])
+
+#maxbound=max(data['A'][0],data['B'][0],data['C'][0])
+maxbound=max(1,1,1)
 minbound = -1.0*maxbound
 ax.auto_scale_xyz([minbound, maxbound], [minbound, maxbound], [minbound, maxbound])
-ax.scatter(Ellipsoids[i].TP[0::3], 
-           Ellipsoids[i].TP[1::3], 
-           Ellipsoids[i].TP[2::3],
-           marker='.')
-    
-fig.show()
+
+X=Y=Z={}
+#ax.scatter(x,y,z,marker='o')
+c=np.array(['k','k','k','b','r','g','y'])
+ls=np.array(['-','-','-','-',':','-.',':'])
+lw=np.array(['1','1','1','2','0.5','0.5','0.5'])
+for i in range(len(data)):
+    print(i)
+    for d in range(10):
+        if d<11:
+            for t in range((ElRes)*(ElRes)*2):
+                start=3*2*d*(ElRes)*(ElRes)+3*t
+            #for t in range((2**i)*(2**i)*2):
+            #   start=3*2*d*(2**i)*(2**i)+3*t
+                end=start+2
+                print("t = ",t,"start = ",start,"end = ",end)
+                X=Ellipsoids[i].TP[start:end+1,0]
+                Y=Ellipsoids[i].TP[start:end+1,1]
+                Z=Ellipsoids[i].TP[start:end+1,2]
+            
+                X=np.append(X,Ellipsoids[i].TP[start,0])
+                Y=np.append(Y,Ellipsoids[i].TP[start,1])
+                Z=np.append(Z,Ellipsoids[i].TP[start,2])
+                
+                ax.plot(X,Y,Z,color=c[i],linestyle=ls[i],linewidth=lw[i])
+  
+ax.set_xlabel('X')
+ax.set_ylabel('Y')
+ax.set_zlabel('Z')
+  
+ax.auto_scale_xyz([minbound, maxbound], [minbound, maxbound], [minbound, maxbound])
+plt.show()
