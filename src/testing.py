@@ -17,7 +17,7 @@ from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 
 nokeepfiles=True
-ElRes=4
+ElRes=32
 
 data = pd.read_csv('ellipsoids_example4.csv')
 
@@ -49,15 +49,15 @@ for i in range(len(data)):
 ax = fig.add_subplot(111, projection='3d')
 
 #maxbound=max(data['A'][0],data['B'][0],data['C'][0])
-maxbound=max(1,1,1)
+maxbound=max(1.5,1.5,1.5)
 minbound = -1.0*maxbound
 ax.auto_scale_xyz([minbound, maxbound], [minbound, maxbound], [minbound, maxbound])
 
 X=Y=Z={}
 #ax.scatter(x,y,z,marker='o')
-c=np.array(['k','k','k','b','r','g','y'])
-ls=np.array(['-','-','-','-',':','-.',':'])
-lw=np.array(['1','1','1','2','0.5','0.5','0.5'])
+c=np.array(['r','g','b','w','r','g','b'])
+ls=np.array(['-','-','-','-','-','-','-'])
+lw=np.array(['0','0','0','0.5','0.5','0.5','0.5'])
 for i in range(len(data)):
     print(i)
     for d in range(10):
@@ -77,7 +77,7 @@ for i in range(len(data)):
                 Z=np.append(Z,Ellipsoids[i].TP[start,2])
                 
                 #ax.plot(X,Y,Z,color=c[i],linestyle=ls[i],linewidth=lw[i])
-                ax.plot_trisurf(X,Y,Z,color=c[i],linestyle=ls[i],linewidth=lw[i])
+                ax.plot_trisurf(X,Y,Z,color=c[i],linestyle=ls[i],linewidth=lw[i],alpha=0.95)
                 
   
 ax.set_xlabel('X')
