@@ -1,4 +1,6 @@
 #!/bin/python
+
+import sys
 import math
 import numpy as np
 import pandas as pd
@@ -7,22 +9,6 @@ from simplekml import Kml, Model, AltitudeMode, Orientation, Scale
 from icosahedron import Icosahedron
 import argparse, os, csv
 
-# Parse input args ############
-parser = argparse.ArgumentParser(description='Builds user-defined ellipsoids as Collada objects, and outputs a google kmz file containing these objects.')
-#parser.add_argument('-i', '--input', nargs="?", help='The input file.')
-parser.add_argument('input', help='The input file.')
-parser.add_argument('output', help='The output file. Output is in KMZ format')
-parser.add_argument('-r', '-res', '--resolution', type=int, default=16, help='The resolution of the generated ellipsoids.')
-parser.add_argument('--keep', action='store_true', help='Do not delete the intermediate collada files.')
-args = parser.parse_args()
-
-nokeepfiles=True
-ElRes=16
-if (args.keep):
-   nokeepfiles=False
-if (args.resolution):
-   ElRes=args.resolution
-###############################
 
 def colours(colour):
     """
@@ -128,60 +114,84 @@ def write_collada_file(T,N,ind,name,r,g,b,t):
 
     mesh.write(name)
 
-
-# Parse input file ##############################
-data=parse_csv(args.input)
-
-Ellipsoids={}
-for i in range(len(data)):
+def main(input, output, ElRes, nokeepfiles=True):
     
-    # instantiate #####################################
-    Ellipsoids[i]=Icosahedron(ElRes,data['description'][i])
-    
-    # re-shape ########################################
-    ax=([data['A'][i],data['B'][i],data['C'][i]])
-    ax.sort(key=float,reverse=True)
-    Ellipsoids[i].stretch(ax[0],ax[1],ax[2])
-    
-    #Define Rotations ################################
-    alpha=data['alpha'][i]*math.pi/180.
-    beta =data['beta'][i] *math.pi/180.
-    gamma=data['gamma'][i]*math.pi/180.
-  
-    # Rotate ellipsoid to match user-defined orientation 
-    Ellipsoids[i].rotate_AlphaBetaGamma(alpha,beta,gamma) 
-      
-    # Rotate ellipsoid to match google-earth coordinates
-    Ellipsoids[i].rotate_eulerXY(math.pi,math.pi/2.)
-                
-    # Write .dae files ###############################
-    name='./'+Ellipsoids[i].name+'.dae'
-    c=colours(data['colour'][i])
-    t=(1.0)*data['transparency'][i].item()
-    write_collada_file(Ellipsoids[i].TP,
-                       Ellipsoids[i].NP,
-                       Ellipsoids[i].indices,
-                       name,
-                       c[0],c[1],c[2],t)
 
+    # Parse input file ##############################
+    data=parse_csv(input)
 
-# Create a KML document #########################
-kml = Kml()
-kml.document.name = "Ellipsoids"
-                   
-for i in range(len(data)):
-    mod = kml.newmodel(altitudemode=AltitudeMode.relativetoground,
-                       location='<longitude>'+repr(data['lon'][i])+'</longitude>'+
-                                '<latitude>'+repr(data['lat'][i])+'</latitude>'+
-                                '<altitude>'+repr(data['alt'][i])+'</altitude>',
-                       visibility=1,
-                       name=data['description'][i]
-                       )
-    mod.link.href=('files/'+Ellipsoids[i].name+'.dae')
-    kml.addfile('./'+Ellipsoids[i].name+'.dae')
-
-kml.savekmz(args.output)
-if (nokeepfiles):
-    # Remove all intermediate Collada Files
+    Ellipsoids={}
     for i in range(len(data)):
-       os.remove('./'+Ellipsoids[i].name+'.dae')
+    
+        # instantiate #####################################
+        Ellipsoids[i]=Icosahedron(ElRes,data['description'][i])
+    
+        # re-shape ########################################
+        ax=([data['A'][i],data['B'][i],data['C'][i]])
+        ax.sort(key=float,reverse=True)
+        Ellipsoids[i].stretch(ax[0],ax[1],ax[2])
+    
+        #Define Rotations ################################
+        alpha=data['alpha'][i]*math.pi/180.
+        beta =data['beta'][i] *math.pi/180.
+        gamma=data['gamma'][i]*math.pi/180.
+  
+        # Rotate ellipsoid to match user-defined orientation 
+        Ellipsoids[i].rotate_AlphaBetaGamma(alpha,beta,gamma) 
+        
+        # Rotate ellipsoid to match google-earth coordinates
+        Ellipsoids[i].rotate_eulerXY(math.pi,math.pi/2.)
+                
+        # Write .dae files ###############################
+        name='./'+Ellipsoids[i].name+'.dae'
+        c=colours(data['colour'][i])
+        t=(1.0)*data['transparency'][i].item()
+        write_collada_file(Ellipsoids[i].TP,
+                           Ellipsoids[i].NP,
+                           Ellipsoids[i].indices,
+                           name,
+                           c[0],c[1],c[2],t)
+
+
+    # Create a KML document #########################
+    kml = Kml()
+    kml.document.name = "Ellipsoids"
+                   
+    for i in range(len(data)):
+        mod = kml.newmodel(altitudemode=AltitudeMode.relativetoground,
+                           location='<longitude>'+repr(data['lon'][i])+'</longitude>'+
+                                    '<latitude>'+repr(data['lat'][i])+'</latitude>'+
+                                    '<altitude>'+repr(data['alt'][i])+'</altitude>',
+                           visibility=1,
+                           name=data['description'][i]
+                           )
+        mod.link.href=('files/'+Ellipsoids[i].name+'.dae')
+        kml.addfile('./'+Ellipsoids[i].name+'.dae')
+
+    kml.savekmz(output)
+    if (nokeepfiles):
+        # Remove all intermediate Collada Files
+        for i in range(len(data)):
+            os.remove('./'+Ellipsoids[i].name+'.dae')
+
+
+if __name__ == "__main__":
+        
+    # Parse input args ############
+    parser = argparse.ArgumentParser(description='Builds user-defined ellipsoids as Collada objects, and outputs a google kmz file containing these objects.')
+    #parser.add_argument('-i', '--input', nargs="?", help='The input file.')
+    parser.add_argument('input', help='The input file.')
+    parser.add_argument('output', help='The output file. Output is in KMZ format')
+    parser.add_argument('-r', '-res', '--resolution', type=int, default=16, help='The resolution of the generated ellipsoids.')
+    parser.add_argument('--keep', action='store_true', help='Do not delete the intermediate collada files.')
+    args = parser.parse_args()
+    
+    nokeepfiles=True
+    ElRes=16
+    if (args.keep):
+        nokeepfiles=False
+        if (args.resolution):
+            ElRes=args.resolution
+    ###############################      
+    
+    main(args.input, args.output, ElRes, nokeepfiles)
