@@ -630,7 +630,8 @@ def rotate_eulerZY(alpha, beta, point):
     R=np.array([[ ca*cb ,   sb  , -cb*sa ],
                 [-ca*sb ,   cb  ,  sa*sb ],
                 [  sa   ,   0   ,   ca   ]])
-             
+
     return np.dot(R,np.transpose(point));
 #============================================================================= 
+
          

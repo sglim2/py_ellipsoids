@@ -132,10 +132,16 @@ def main(input, output, ElRes, nokeepfiles=True):
         Ellipsoids[i].stretch(ax[0],ax[1],ax[2])
     
         #Define Rotations ################################
+        #alpah is the plunge of the ellipsoid long axis
         alpha=data['alpha'][i]*math.pi/180.
-        beta =data['beta'][i] *math.pi/180.
-        gamma=data['gamma'][i]*math.pi/180.
-  
+        #beta and gamma are modified to make them measured relative to North at 0 with clockwise positive
+        #beta is the plunge of the ellipsoid long axis
+        beta =math.pi/2.-data['beta'][i] *math.pi/180.
+        gamma1=math.pi/2.-data['gamma'][i]*math.pi/180.
+        #gamma is derived from gamma1 using the strike and dip of the ellipsoid AB plane
+        #gamma1 is the strike of the AB plane
+        gamma=-1*math.atan(-1*math.tan(math.pi/4.)*math.cos(gamma1-beta))
+        
         # Rotate ellipsoid to match user-defined orientation 
         Ellipsoids[i].rotate_AlphaBetaGamma(alpha,beta,gamma) 
         
@@ -195,3 +201,4 @@ if __name__ == "__main__":
     ###############################      
     
     main(args.input, args.output, ElRes, nokeepfiles)
+
