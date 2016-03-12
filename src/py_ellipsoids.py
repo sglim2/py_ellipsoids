@@ -8,6 +8,7 @@ from collada import *
 from simplekml import Kml, Model, AltitudeMode, Orientation, Scale
 from icosahedron import Icosahedron
 import argparse, os, csv
+from axes import Axes
 
 
 def colours(colour):
@@ -72,7 +73,7 @@ def parse_csv(inputfile):
     return df
 
 
-def write_collada_file(T,N,ind,name,r,g,b,t):
+def write_collada_file(T,N,ind,name,r,g,b,t,double_sided=False):
     """
     Exports a vertex array, a normal array, and indices array to a collada file using pycollada.
     
@@ -86,7 +87,7 @@ def write_collada_file(T,N,ind,name,r,g,b,t):
     """
     # Create Collada Object and writer to tmp file
     mesh = Collada()
-    effect = material.Effect("effect0", [], "phong", diffuse=(r,g,b), transparent=(r,g,b), transparency=t)
+    effect = material.Effect("effect0", [], "phong", diffuse=(r,g,b), transparent=(r,g,b), transparency=t, double_sided=double_sided)
     mat = material.Material("material0", "mymaterial", effect)
     mesh.effects.append(effect)
     mesh.materials.append(mat)
@@ -114,25 +115,30 @@ def write_collada_file(T,N,ind,name,r,g,b,t):
 
     mesh.write(name)
 
-def main(input, output, ElRes, nokeepfiles=True):
+def main(input, output, ElRes, axes, nokeepfiles=True):
     
 
     # Parse input file ##############################
     data=parse_csv(input)
 
     Ellipsoids={}
+    ElAx={}
     for i in range(len(data)):
     
         # instantiate #####################################
         Ellipsoids[i]=Icosahedron(ElRes,data['description'][i])
+        if axes:
+            ElAx[i]=Axes(data['description'][i])
     
         # re-shape ########################################
         ax=([data['A'][i],data['B'][i],data['C'][i]])
         ax.sort(key=float,reverse=True)
         Ellipsoids[i].stretch(ax[0],ax[1],ax[2])
+        if axes:
+            ElAx[i].stretch(ax[0],ax[1],ax[2])
     
         #Define Rotations ################################
-        #alpah is the plunge of the ellipsoid long axis
+        #alpha is the plunge of the ellipsoid long axis
         alpha=data['alpha'][i]*math.pi/180.
         #beta and gamma are modified to make them measured relative to North at 0 with clockwise positive
         #beta is the plunge of the ellipsoid long axis
@@ -144,9 +150,13 @@ def main(input, output, ElRes, nokeepfiles=True):
         
         # Rotate ellipsoid to match user-defined orientation 
         Ellipsoids[i].rotate_AlphaBetaGamma(alpha,beta,gamma) 
+        if axes:
+            ElAx[i].rotate_AlphaBetaGamma(alpha,beta,gamma)
         
         # Rotate ellipsoid to match google-earth coordinates
         Ellipsoids[i].rotate_eulerXY(math.pi,math.pi/2.)
+        if axes:
+            ElAx[i].rotate_eulerXY(math.pi,math.pi/2.)
                 
         # Write .dae files ###############################
         name='./'+Ellipsoids[i].name+'.dae'
@@ -157,6 +167,14 @@ def main(input, output, ElRes, nokeepfiles=True):
                            Ellipsoids[i].indices,
                            name,
                            c[0],c[1],c[2],t)
+        if axes:
+            write_collada_file(ElAx[i].TP,
+                               ElAx[i].NP,
+                               ElAx[i].indices,
+                               './'+ElAx[i].name+'.dae',
+                               0.,0.,0.,1.0,
+                               double_sided=True)
+                           
 
 
     # Create a KML document #########################
@@ -173,12 +191,25 @@ def main(input, output, ElRes, nokeepfiles=True):
                            )
         mod.link.href=('files/'+Ellipsoids[i].name+'.dae')
         kml.addfile('./'+Ellipsoids[i].name+'.dae')
+        if axes:
+            mod2 = kml.newmodel(altitudemode=AltitudeMode.relativetoground,
+                                location='<longitude>'+repr(data['lon'][i])+'</longitude>'+
+                                         '<latitude>'+repr(data['lat'][i])+'</latitude>'+
+                                         '<altitude>'+repr(data['alt'][i])+'</altitude>',
+                                visibility=1,
+                                name=data['description'][i]+'_axes'
+                           )
+            mod2.link.href=('files/'+ElAx[i].name+'.dae')
+            kml.addfile('./'+ElAx[i].name+'.dae')
 
     kml.savekmz(output)
     if (nokeepfiles):
         # Remove all intermediate Collada Files
         for i in range(len(data)):
             os.remove('./'+Ellipsoids[i].name+'.dae')
+        if axes:
+            for i in range(len(data)):
+                os.remove('./'+ElAx[i].name+'.dae')
 
 
 if __name__ == "__main__":
@@ -188,6 +219,7 @@ if __name__ == "__main__":
     #parser.add_argument('-i', '--input', nargs="?", help='The input file.')
     parser.add_argument('input', help='The input file.')
     parser.add_argument('output', help='The output file. Output is in KMZ format')
+    parser.add_argument('--axes', action='store_true', help='Include axes as part of the ellipsoid objects')
     parser.add_argument('-r', '-res', '--resolution', type=int, default=16, help='The resolution of the generated ellipsoids.')
     parser.add_argument('--keep', action='store_true', help='Do not delete the intermediate collada files.')
     args = parser.parse_args()
@@ -200,5 +232,5 @@ if __name__ == "__main__":
             ElRes=args.resolution
     ###############################      
     
-    main(args.input, args.output, ElRes, nokeepfiles)
+    main(args.input, args.output, ElRes, args.axes, nokeepfiles)
 

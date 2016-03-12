@@ -437,7 +437,7 @@ class Icosahedron:
     def rotate_eulerYX(self,alpha,beta):
         """
         Rotate icosahedron by alpha radians about X, then by beta radians about
-        Y. Rotation matrices about X,Y-axes are pre-mutliplied to give a new
+        Y. Rotation matrices about X,Y-axes are pre-multiplied to give a new
         R matrix:
           R = YX
         Rotation is performed by R acting on each point on the icosahedron.
@@ -470,7 +470,7 @@ class Icosahedron:
     def rotate_eulerXY(self,alpha,beta):
         """
         Rotate icosahedron by alpha radians about Y, then by beta radians about
-        X. Rotation matirces about Y,X-axes are pre-mutliplied to give a new
+        X. Rotation matrices about Y,X-axes are pre-multiplied to give a new
         R matrix:
           R = XY
         Rotation is performed by R acting on each point on the icosahedron.
@@ -614,7 +614,7 @@ def rotate_point_about_u(theta, point, u):
 def rotate_eulerZY(alpha, beta, point):
     """
     Rotate a point by alpha radians about Y, then by beta radians about
-    X. Rotation matrices about Y,X-axes are pre-mutliplied to give a new
+    X. Rotation matrices about Y,X-axes are pre-multiplied to give a new
     R matrix:
       R = XY
     Rotation is performed by R acting on the point.    
