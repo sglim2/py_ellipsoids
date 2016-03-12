@@ -15,7 +15,7 @@ class Icosahedron:
         self.name    = name                 # A short name of our icosahedron
         self.ngrid   = ngrid                # grid size for each domain
         self.NT      = 10*2*ngrid**2        # Number of triangles
-        self.TP      = np.zeros((3*self.NT,3))   # Vertices fo triangles
+        self.TP      = np.zeros((3*self.NT,3))   # Vertices of triangles
         self.NP      = np.zeros((3*self.NT,3))   # Normal at each triangle vertex
         self.indices = np.zeros(3*2*self.NT,dtype=int) # vertex and normal locations (for use with pycollada)
         
