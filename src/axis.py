@@ -9,14 +9,13 @@ Created on Mon Jan 26 09:41:29 2015
 import numpy as np
 import math
 
-
 #=============================================================================
-class Axes:
-    def __init__(self, name='ellipsoid'):
+class Axis:
+    def __init__(self, name='axis'):
         self.name    = name                  # A short name of our Axes
-        self.TP      = np.zeros((6*3*3,3))   # Vertices of triangles
-        self.NP      = np.zeros((6*3*3,3))   # Normal at each triangle vertex
-        self.indices = np.zeros(6*3*3*2,dtype=int)  # vertex and normal locations (for use with pycollada)
+        self.TP      = np.zeros((2*3*3,3))   # Vertices of triangles
+        self.NP      = np.zeros((2*3*3,3))   # Normal at each triangle vertex
+        self.indices = np.zeros(2*3*3*2,dtype=int)  # vertex and normal locations (for use with pycollada)
         self.origin  = np.array([0.,0.,0.])  # The origin of the Axes. This point must be translated along
                                              # with any translate function of the Axes data
         
@@ -27,12 +26,12 @@ class Axes:
         """
         Creates an axes object for converting to a COLLADA object.
         """
-        self.name=self.name+'_axes'
+        #self.name=self.name+'_axes'
 
-        A=0.02
-        B=0.8
+        A=0.005
+        B=0.95
         C=1.0
-        D=0.1
+        D=0.02
         TP1=np.array([[0. , -A , 0.],
                       [B  , -A , 0.],
                       [0. ,  A , 0.],
@@ -44,16 +43,8 @@ class Axes:
                       [B  ,  D , 0.]])
         #TP2=np.zeros((5,3))
         TP2=rotate_point_about_xaxis(math.pi/2,TP1[:])
-        TP3=rotate_point_about_zaxis(math.pi/2,TP1[:])
-        TP4=rotate_point_about_zaxis(math.pi/2,TP2[:])
-        TP5=rotate_point_about_yaxis(-math.pi/2,TP1[:])
-        TP6=rotate_point_about_yaxis(-math.pi/2,TP2[:])
         self.TP=np.concatenate((TP1.reshape(3*len(TP1)),
-                                TP2.reshape(3*len(TP2)),
-                                TP3.reshape(3*len(TP3)),
-                                TP4.reshape(3*len(TP4)),
-                                TP5.reshape(3*len(TP5)),
-                                TP6.reshape(3*len(TP6))),axis=0).reshape((6*9,3))
+                                TP2.reshape(3*len(TP2))),axis=0).reshape((2*9,3))
         self.NP[::3]=self.NP[1::3]=self.NP[2::3]=np.cross(self.TP[::3]-self.TP[1::3],self.TP[2::3]-self.TP[1::3])
         
         for i in range(len(self.TP)):

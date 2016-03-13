@@ -9,6 +9,7 @@ from simplekml import Kml, Model, AltitudeMode, Orientation, Scale
 from icosahedron import Icosahedron
 import argparse, os, csv
 from axes import Axes
+from axis import Axis
 
 
 def colours(colour):
@@ -123,19 +124,30 @@ def main(input, output, ElRes, axes, nokeepfiles=True):
 
     Ellipsoids={}
     ElAx={}
+    AxL={}
+    AxM={}
+    AxS={}
     for i in range(len(data)):
     
         # instantiate #####################################
         Ellipsoids[i]=Icosahedron(ElRes,data['description'][i])
         if axes:
-            ElAx[i]=Axes(data['description'][i])
+            #ElAx[i]=Axes(data['description'][i])
+            AxL[i]=Axis(data['description'][i]+'_axisLong')
+            AxM[i]=Axis(data['description'][i]+'_axisMed')
+            AxM[i].rotate_about_zaxis(math.pi/2.) # get correct orientation
+            AxS[i]=Axis(data['description'][i]+'_axisShort')
+            AxS[i].rotate_about_yaxis(math.pi/2.) # get correct orientation
     
         # re-shape ########################################
         ax=([data['A'][i],data['B'][i],data['C'][i]])
         ax.sort(key=float,reverse=True)
         Ellipsoids[i].stretch(ax[0],ax[1],ax[2])
         if axes:
-            ElAx[i].stretch(ax[0],ax[1],ax[2])
+            #ElAx[i].stretch(ax[0],ax[1],ax[2])
+            AxL[i].stretch(ax[0],ax[0],ax[0])
+            AxM[i].stretch(ax[0],ax[1],ax[0]) # axis is in y-direction
+            AxS[i].stretch(ax[0],ax[0],ax[2]) # axis is in z-direction
     
         #Define Rotations ################################
         #alpha is the plunge of the ellipsoid long axis
@@ -151,12 +163,18 @@ def main(input, output, ElRes, axes, nokeepfiles=True):
         # Rotate ellipsoid to match user-defined orientation 
         Ellipsoids[i].rotate_AlphaBetaGamma(alpha,beta,gamma) 
         if axes:
-            ElAx[i].rotate_AlphaBetaGamma(alpha,beta,gamma)
+            #ElAx[i].rotate_AlphaBetaGamma(alpha,beta,gamma)
+            AxL[i].rotate_AlphaBetaGamma(alpha,beta,gamma)
+            AxM[i].rotate_AlphaBetaGamma(alpha,beta,gamma)
+            AxS[i].rotate_AlphaBetaGamma(alpha,beta,gamma)
         
         # Rotate ellipsoid to match google-earth coordinates
         Ellipsoids[i].rotate_eulerXY(math.pi,math.pi/2.)
         if axes:
-            ElAx[i].rotate_eulerXY(math.pi,math.pi/2.)
+            #ElAx[i].rotate_eulerXY(math.pi,math.pi/2.)
+            AxL[i].rotate_eulerXY(math.pi,math.pi/2.)
+            AxM[i].rotate_eulerXY(math.pi,math.pi/2.)
+            AxS[i].rotate_eulerXY(math.pi,math.pi/2.)
                 
         # Write .dae files ###############################
         name='./'+Ellipsoids[i].name+'.dae'
@@ -168,11 +186,38 @@ def main(input, output, ElRes, axes, nokeepfiles=True):
                            name,
                            c[0],c[1],c[2],t)
         if axes:
-            write_collada_file(ElAx[i].TP,
-                               ElAx[i].NP,
-                               ElAx[i].indices,
-                               './'+ElAx[i].name+'.dae',
-                               0.,0.,0.,1.0,
+            #write_collada_file(ElAx[i].TP,
+            #                   ElAx[i].NP,
+            #                   ElAx[i].indices,
+            #                   './'+ElAx[i].name+'.dae',
+            #                   0.,0.,0.,1.0,
+            #                   double_sided=True)
+            write_collada_file(AxL[i].TP,
+                               AxL[i].NP,
+                               AxL[i].indices,
+                               './'+AxL[i].name+'.dae',
+                               colours('black')[0],
+                               colours('black')[1],
+                               colours('black')[2],
+                               0.0,
+                               double_sided=True)
+            write_collada_file(AxM[i].TP,
+                               AxM[i].NP,
+                               AxM[i].indices,
+                               './'+AxM[i].name+'.dae',
+                               colours('grey')[0],
+                               colours('grey')[1],
+                               colours('grey')[2],
+                               0.0,
+                               double_sided=True)
+            write_collada_file(AxS[i].TP,
+                               AxS[i].NP,
+                               AxS[i].indices,
+                               './'+AxS[i].name+'.dae',
+                               colours('white')[0],
+                               colours('white')[1],
+                               colours('white')[2],
+                               0.0,
                                double_sided=True)
                            
 
@@ -192,15 +237,42 @@ def main(input, output, ElRes, axes, nokeepfiles=True):
         mod.link.href=('files/'+Ellipsoids[i].name+'.dae')
         kml.addfile('./'+Ellipsoids[i].name+'.dae')
         if axes:
-            mod2 = kml.newmodel(altitudemode=AltitudeMode.relativetoground,
+            #mod2 = kml.newmodel(altitudemode=AltitudeMode.relativetoground,
+            #                    location='<longitude>'+repr(data['lon'][i])+'</longitude>'+
+            #                             '<latitude>'+repr(data['lat'][i])+'</latitude>'+
+            #                             '<altitude>'+repr(data['alt'][i])+'</altitude>',
+            #                    visibility=1,
+            #                    name=data['description'][i]+'_axes'
+            #               )
+            #mod2.link.href=('files/'+ElAx[i].name+'.dae')
+            #kml.addfile('./'+ElAx[i].name+'.dae')
+            modaxL = kml.newmodel(altitudemode=AltitudeMode.relativetoground,
                                 location='<longitude>'+repr(data['lon'][i])+'</longitude>'+
                                          '<latitude>'+repr(data['lat'][i])+'</latitude>'+
                                          '<altitude>'+repr(data['alt'][i])+'</altitude>',
                                 visibility=1,
-                                name=data['description'][i]+'_axes'
+                                name=data['description'][i]+'_axesL'
                            )
-            mod2.link.href=('files/'+ElAx[i].name+'.dae')
-            kml.addfile('./'+ElAx[i].name+'.dae')
+            modaxL.link.href=('files/'+AxL[i].name+'.dae')
+            kml.addfile('./'+AxL[i].name+'.dae')
+            modaxM = kml.newmodel(altitudemode=AltitudeMode.relativetoground,
+                                location='<longitude>'+repr(data['lon'][i])+'</longitude>'+
+                                         '<latitude>'+repr(data['lat'][i])+'</latitude>'+
+                                         '<altitude>'+repr(data['alt'][i])+'</altitude>',
+                                visibility=1,
+                                name=data['description'][i]+'_axesM'
+                           )
+            modaxM.link.href=('files/'+AxM[i].name+'.dae')
+            kml.addfile('./'+AxM[i].name+'.dae')
+            modaxS = kml.newmodel(altitudemode=AltitudeMode.relativetoground,
+                                location='<longitude>'+repr(data['lon'][i])+'</longitude>'+
+                                         '<latitude>'+repr(data['lat'][i])+'</latitude>'+
+                                         '<altitude>'+repr(data['alt'][i])+'</altitude>',
+                                visibility=1,
+                                name=data['description'][i]+'_axesS'
+                           )
+            modaxS.link.href=('files/'+AxS[i].name+'.dae')
+            kml.addfile('./'+AxS[i].name+'.dae')
 
     kml.savekmz(output)
     if (nokeepfiles):
@@ -209,7 +281,9 @@ def main(input, output, ElRes, axes, nokeepfiles=True):
             os.remove('./'+Ellipsoids[i].name+'.dae')
         if axes:
             for i in range(len(data)):
-                os.remove('./'+ElAx[i].name+'.dae')
+                #os.remove('./'+ElAx[i].name+'.dae')
+                os.remove('./'+AxL[i].name+'.dae')
+                os.remove('./'+AxM[i].name+'.dae')
 
 
 if __name__ == "__main__":
