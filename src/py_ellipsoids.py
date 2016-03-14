@@ -54,10 +54,14 @@ def parse_csv(inputfile):
     lon         (Longitude position of the centre of the ellipsoid)
     alt         (Altitude position of the centre of the ellispsoid, relative to
                  the ground)
-    alpha       (Pitch of the ellipsoid, in degrees, about the y-axis (S-N))
-    beta        (Yaw of ellipsoid, in degrees, about the z-axis (up-altitude))
-    gamma       (Roll of the ellipsoid, in degrees, about the ellipsoids
-                 long semi-axis)
+#    alpha       (Pitch of the ellipsoid, in degrees, about the y-axis (S-N))
+#    beta        (Yaw of ellipsoid, in degrees, about the z-axis (up-altitude))
+#    gamma       (Roll of the ellipsoid, in degrees, about the ellipsoids
+#                 long semi-axis)
+    plunge      (Plunge of the long axis of the ellipsoid, in degrees)
+    trend       (Trend of the long axis of the ellipsoid, in degrees)
+    strike      (Strike of the XY plane of ellipsoid, in degrees)
+    dip         (Dip of of the XY plane of ellipsoid, in degrees)
     colour      (colour assigned to the ellipsoid. Any one of the pre-defined
                  colours is allowed)
         
@@ -123,7 +127,6 @@ def main(input, output, ElRes, axes, nokeepfiles=True):
     data=parse_csv(input)
 
     Ellipsoids={}
-    ElAx={}
     AxL={}
     AxM={}
     AxS={}
@@ -132,7 +135,6 @@ def main(input, output, ElRes, axes, nokeepfiles=True):
         # instantiate #####################################
         Ellipsoids[i]=Icosahedron(ElRes,data['description'][i])
         if axes:
-            #ElAx[i]=Axes(data['description'][i])
             AxL[i]=Axis(data['description'][i]+'_axisLong')
             AxM[i]=Axis(data['description'][i]+'_axisMed')
             AxM[i].rotate_about_zaxis(math.pi/2.) # get correct orientation
@@ -144,34 +146,29 @@ def main(input, output, ElRes, axes, nokeepfiles=True):
         ax.sort(key=float,reverse=True)
         Ellipsoids[i].stretch(ax[0],ax[1],ax[2])
         if axes:
-            #ElAx[i].stretch(ax[0],ax[1],ax[2])
             AxL[i].stretch(ax[0],ax[0],ax[0])
             AxM[i].stretch(ax[0],ax[1],ax[0]) # axis is in y-direction
             AxS[i].stretch(ax[0],ax[0],ax[2]) # axis is in z-direction
     
         #Define Rotations ################################
-        #alpha is the plunge of the ellipsoid long axis
-        alpha=data['alpha'][i]*math.pi/180.
-        #beta and gamma are modified to make them measured relative to North at 0 with clockwise positive
-        #beta is the plunge of the ellipsoid long axis
-        beta =math.pi/2.-data['beta'][i] *math.pi/180.
-        gamma1=math.pi/2.-data['gamma'][i]*math.pi/180.
-        #gamma is derived from gamma1 using the strike and dip of the ellipsoid AB plane
-        #gamma1 is the strike of the AB plane
-        gamma=-1*math.atan(-1*math.tan(math.pi/4.)*math.cos(gamma1-beta))
+        plunge=data['plunge'][i]*math.pi/180.
+        # trend and strike are modified to make them measured relative to North at 0 with clockwise positive
+        trend =math.pi/2.-data['trend'][i] *math.pi/180.
+        strike=math.pi/2.-data['strike'][i]*math.pi/180.
+        dip=data['dip'][i]*math.pi/180.
+        # gamma, third rotation about the ellipsoid long axis, is derived as below
+        gamma=-1*math.atan(-1*math.tan(dip)*math.cos(strike-trend))
         
         # Rotate ellipsoid to match user-defined orientation 
-        Ellipsoids[i].rotate_AlphaBetaGamma(alpha,beta,gamma) 
+        Ellipsoids[i].rotate_AlphaBetaGamma(plunge,trend,gamma) 
         if axes:
-            #ElAx[i].rotate_AlphaBetaGamma(alpha,beta,gamma)
-            AxL[i].rotate_AlphaBetaGamma(alpha,beta,gamma)
-            AxM[i].rotate_AlphaBetaGamma(alpha,beta,gamma)
-            AxS[i].rotate_AlphaBetaGamma(alpha,beta,gamma)
+            AxL[i].rotate_AlphaBetaGamma(plunge,trend,gamma)
+            AxM[i].rotate_AlphaBetaGamma(plunge,trend,gamma)
+            AxS[i].rotate_AlphaBetaGamma(plunge,trend,gamma)
         
         # Rotate ellipsoid to match google-earth coordinates
         Ellipsoids[i].rotate_eulerXY(math.pi,math.pi/2.)
         if axes:
-            #ElAx[i].rotate_eulerXY(math.pi,math.pi/2.)
             AxL[i].rotate_eulerXY(math.pi,math.pi/2.)
             AxM[i].rotate_eulerXY(math.pi,math.pi/2.)
             AxS[i].rotate_eulerXY(math.pi,math.pi/2.)
@@ -186,12 +183,6 @@ def main(input, output, ElRes, axes, nokeepfiles=True):
                            name,
                            c[0],c[1],c[2],t)
         if axes:
-            #write_collada_file(ElAx[i].TP,
-            #                   ElAx[i].NP,
-            #                   ElAx[i].indices,
-            #                   './'+ElAx[i].name+'.dae',
-            #                   0.,0.,0.,1.0,
-            #                   double_sided=True)
             write_collada_file(AxL[i].TP,
                                AxL[i].NP,
                                AxL[i].indices,
@@ -237,15 +228,6 @@ def main(input, output, ElRes, axes, nokeepfiles=True):
         mod.link.href=('files/'+Ellipsoids[i].name+'.dae')
         kml.addfile('./'+Ellipsoids[i].name+'.dae')
         if axes:
-            #mod2 = kml.newmodel(altitudemode=AltitudeMode.relativetoground,
-            #                    location='<longitude>'+repr(data['lon'][i])+'</longitude>'+
-            #                             '<latitude>'+repr(data['lat'][i])+'</latitude>'+
-            #                             '<altitude>'+repr(data['alt'][i])+'</altitude>',
-            #                    visibility=1,
-            #                    name=data['description'][i]+'_axes'
-            #               )
-            #mod2.link.href=('files/'+ElAx[i].name+'.dae')
-            #kml.addfile('./'+ElAx[i].name+'.dae')
             modaxL = kml.newmodel(altitudemode=AltitudeMode.relativetoground,
                                 location='<longitude>'+repr(data['lon'][i])+'</longitude>'+
                                          '<latitude>'+repr(data['lat'][i])+'</latitude>'+
@@ -284,6 +266,7 @@ def main(input, output, ElRes, axes, nokeepfiles=True):
                 #os.remove('./'+ElAx[i].name+'.dae')
                 os.remove('./'+AxL[i].name+'.dae')
                 os.remove('./'+AxM[i].name+'.dae')
+                os.remove('./'+AxS[i].name+'.dae')
 
 
 if __name__ == "__main__":
