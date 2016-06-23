@@ -10,9 +10,9 @@ Installation
 ============
 Some python python packages are necessary for successful execution. The 
 necessary packages can be found in the requirements.txt file. To install:
-
- # pip install -r requirements.txt
-
+```
+pip install -r requirements.txt
+```
 
 
 Compatibility
@@ -24,9 +24,9 @@ py_ellipsoids has been tested using python 2.7.8+ and python 3.4.1+.
 Usage
 =====
 Instructions for execution can be obtained by running the command:
-
- # python src/py_ellipsoids.py -h 
-
+```
+python src/py_ellipsoids.py -h 
+```
 
 
 The Config file
